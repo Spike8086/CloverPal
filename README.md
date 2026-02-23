@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/Privacy-100%25_On--Device-4CAF50?style=flat-square&logo=shield&logoColor=white" alt="On Device">
 </p>
 
-CloverPal is an **Android** application designed for **local/offline Large** Language Model (LLM) inference. It provides a graphical interface to load and interact with **GGUF format models** entirely offline.
+CloverPal is an **Android** application designed for **local/offline Large** Language Model (LLM) inference. It provides a graphical interface to load and interact with **GGUF format models** entirely offline. 
 
 [Download CloverPal Here](https://github.com/Spike8086/CloverPal/releases/download/v1.0.1/CloverPal_v1.0.1.apk)
 
