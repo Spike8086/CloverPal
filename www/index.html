@@ -694,6 +694,86 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
   line-height: 1.5;
 }
 
+/* === 模型下拉栏滑动与紧凑 UI 修复 === */
+#modelSheet { padding-bottom: 20px !important; overflow: hidden; }
+.ms-wrapper { display: flex; width: 200%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); max-height: 70vh; }
+.ms-view { width: 50%; flex-shrink: 0; display: flex; flex-direction: column; max-height: inherit; }
+.ms-main-scroll, .ms-more-scroll { overflow-y: auto; overflow-x: hidden; flex: 1; }
+
+/* 紧凑的模型列表项 */
+.sheet-model-item { padding: 10px 24px !important; display: flex; align-items: center; transition: background 0.1s; cursor: pointer; }
+.sheet-model-item:hover { background: var(--bg-hover); }
+.sheet-model-item.selected .mo-name { color: var(--accent); font-weight: 600; }
+.sheet-model-item .mo-info { flex: 1; min-width: 0; }
+.sheet-model-item .mo-name { font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sheet-model-item .mo-desc { font-size: 12px; color: var(--text-muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sheet-model-actions { display: flex; align-items: center; gap: 12px; }
+
+/* 专属的编辑按钮 */
+.sheet-model-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.15s; }
+.sheet-model-btn:hover { color: var(--text-primary); }
+
+/* 更多模型按钮 */
+.ms-more-btn { padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: var(--text-primary); transition: background 0.1s; }
+.ms-more-btn:hover { background: var(--bg-hover); }
+.ms-more-btn span { font-size: 14.5px; font-weight: 500; }
+.ms-more-btn svg { width: 18px; height: 18px; color: var(--text-muted); }
+
+/* === 代码块增强 UI === */
+.code-block-wrapper {
+  margin: 14px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #1E1E1E; /* 经典深色代码背景 */
+  border: 1px solid var(--border);
+  font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+}
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  background: #2D2D2D;
+  border-bottom: 1px solid #1E1E1E;
+  font-size: 12px;
+  color: #A0A0A0;
+  user-select: none;
+}
+.code-block-header .code-lang {
+  text-transform: lowercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.code-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #A0A0A0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  transition: color 0.2s;
+}
+.code-copy-btn:hover { color: #FFFFFF; }
+.code-block-wrapper pre {
+  margin: 0 !important;
+  padding: 14px !important;
+  overflow-x: auto;
+  font-size: 13.5px !important;
+  line-height: 1.6 !important;
+  color: #D4D4D4; /* 浅灰色文字 */
+}
+/* 覆盖原先针对 AI 气泡代码的默认样式 */
+.msg-ai .text .code-block-wrapper pre code {
+  background: none !important;
+  color: inherit !important;
+  padding: 0 !important;
+  font-family: inherit !important;
+  border-radius: 0 !important;
+}
+
 </style>
 </head>
 <body class="dark">
@@ -704,7 +784,7 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
 <!-- Sidebar -->
 <aside class="sidebar" id="sb">
   <div class="sb-logo" style="display: flex; align-items: center; gap: 4px;">
-  CloverAI
+  CloverPal
   <svg viewBox="0 0 68 68" width="24" height="24">
     <g transform="translate(34,34)" fill="var(--accent)">
       <path d="M 0 0 C -8 -8, -18 -12, -18 -22 C -18 -30, -8 -30, 0 -22 C 8 -30, 18 -30, 18 -22 C 18 -12, 8 -8, 0 0 Z" transform="translate(0, -2)"/>
@@ -890,8 +970,21 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
       <input type="text" id="editModelDesc" data-i18n-placeholder="edit_model_desc_ph" placeholder="例如：通用对话、编程专用..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg-input); color:var(--text-primary); outline:none;">
     </div>
     <div class="set-input-group" style="margin: 0 0 20px 0;">
-      <label style="font-size: 12px;" data-i18n="edit_model_sys">系统提示词</label>
-      <textarea id="editModelSysPrompt" rows="4" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg-input); color:var(--text-primary); outline:none; resize:none; font-family:inherit;"></textarea>
+      <!-- 新增：支持思考模式的开关 -->
+      <div class="toggle-row" style="padding: 0; margin-bottom: 20px;">
+        <div class="toggle-info">
+          <div class="toggle-label" style="font-size: 13px;" data-i18n="edit_model_think">支持思考模式</div>
+          <div class="toggle-desc" style="font-size: 11.5px;" data-i18n="edit_model_think_desc">原生支持 <think> 标签的模型</div>
+        </div>
+        <button class="toggle-switch" id="editModelThinkToggle" onclick="this.classList.toggle('on')"></button>
+      </div>
+      <!-- 增加 Flex 布局，右侧显示 Token -->
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label style="font-size: 12px;" data-i18n="edit_model_sys">系统提示词</label>
+          <span id="sysTokenCount" style="font-size: 11px; color: var(--text-muted); font-family: monospace;">0 tk</span>
+      </div>
+      <!-- 增加 oninput 监听 -->
+      <textarea id="editModelSysPrompt" oninput="updateSysTokenCount()" rows="4" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg-input); color:var(--text-primary); outline:none; resize:none; font-family:inherit;"></textarea>
     </div>
     
     <div style="margin: 0 0 20px 0; padding: 12px; background: rgba(120,120,120,0.1); border-radius: 8px; font-size: 11px; color: var(--text-muted); line-height: 1.5; word-break: break-all; text-align: left;">
@@ -923,8 +1016,13 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
     </div>
     
     <div class="set-input-group" style="margin: 0 0 20px 0;">
-      <label style="font-size: 12px;" data-i18n="profile_bio">关于我</label>
-      <textarea id="editUserBioInput" rows="4" data-i18n-placeholder="profile_bio_ph" placeholder="例如：我是一个喜剧演员。请用幽默的语气回答我的问题..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg-input); color:var(--text-primary); outline:none; resize:none; font-family:inherit;"></textarea>
+      <!-- 增加 Flex 布局，右侧显示 Token -->
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label style="font-size: 12px;" data-i18n="profile_bio">关于我</label>
+          <span id="bioTokenCount" style="font-size: 11px; color: var(--text-muted); font-family: monospace;">0 tk</span>
+      </div>
+      <!-- 增加 oninput 监听 -->
+      <textarea id="editUserBioInput" oninput="updateBioTokenCount()" rows="4" data-i18n-placeholder="profile_bio_ph" placeholder="例如：我是一个喜剧演员。请用幽默的语气回答我的问题..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg-input); color:var(--text-primary); outline:none; resize:none; font-family:inherit;"></textarea>
     </div>
     <div class="del-btns">
       <button class="del-btn cancel" onclick="closeUserProfile()" data-i18n="btn_cancel">取消</button>
@@ -947,8 +1045,8 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
       </svg>
     </div>
     
-    <h2 style="font-family:'Source Serif 4', 'Noto Sans SC', serif; font-weight: 400; font-size: 24px; margin-bottom: 4px; color: var(--text-primary);">Clover</h2>
-    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Version 1.0.1</p>
+    <h2 style="font-family:'Source Serif 4', 'Noto Sans SC', serif; font-weight: 400; font-size: 24px; margin-bottom: 4px; color: var(--text-primary);">CloverPal</h2>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Version 1.0.2</p>
     
     <div style="text-align: left; background: var(--bg-page); padding: 16px; border-radius: 12px; margin-bottom: 24px; font-size: 13px; line-height: 1.6; border: 1px solid var(--border);">
       <div style="margin-bottom: 14px;">
@@ -956,7 +1054,7 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span data-i18n="about_author">作者 (Author)</span>
         </strong>
-        <div style="color: var(--text-secondary); margin-top: 4px;" data-i18n="about_author_desc">CloverAI是由 Spike8086开发一款纯本地大模型APP。</div>
+        <div style="color: var(--text-secondary); margin-top: 4px;" data-i18n="about_author_desc">CloverPal是由 Spike8086开发一款纯本地大模型APP。</div>
         <a href="https://github.com/Spike8086" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 6px 12px; background: var(--bg-hover); color: var(--text-primary); text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 13px; transition: background 0.2s;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
@@ -1058,7 +1156,7 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
       <div class="set-item" onclick="openAbout();">
         <div class="set-item-left">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <span class="set-item-label" data-i18n="set_about">关于 CloverAI</span>
+          <span class="set-item-label" data-i18n="set_about">关于 CloverPal</span>
         </div>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
@@ -1256,12 +1354,47 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
 
 <script>
 // ── Config ──
+// ════════ 核心：主题持久化与状态同步 ════════
+(function initTheme() {
+    // 1. 页面刚开始解析 JS 时，立刻读取本地状态
+    const savedTheme = localStorage.getItem('cfg_theme');
+    
+    // 默认是深色(dark)，只有当明确保存了 'light' 时才切到白天模式
+    if (savedTheme === 'light') {
+        document.body.classList.remove('dark');
+    } else {
+        document.body.classList.add('dark');
+        localStorage.setItem('cfg_theme', 'dark'); // 兜底初始值
+    }
+})();
+
+// 2. 统一的主题切换枢纽 (供侧边栏和设置面板共同调用)
+function toggleTheme() {
+    // 切换 body 的 dark 类名
+    const isDark = document.body.classList.toggle('dark');
+    
+    // 将状态死死钉在 localStorage 里
+    localStorage.setItem('cfg_theme', isDark ? 'dark' : 'light');
+    
+    // 自动寻找并同步设置面板里的 UI 开关状态
+    const darkToggle = document.getElementById('darkToggle');
+    if (darkToggle) {
+        darkToggle.classList.toggle('on', isDark);
+    }
+}
+
+// 3. 兼容设置面板里的旧按钮 onClick 绑定
+function toggleDarkSetting() {
+    toggleTheme();
+}
+// ════════ 主题管家结束 ════════
+
 // ════════ 多语言 (i18n) 引擎 ════════
 const i18n = {
     zh: {
         set_account: "账户",
         set_username: "用户名",
-        set_about: "关于 CloverAI",
+        set_about: "关于 CloverPal",
         set_language: "语言 / Language",
         lang_name: "简体中文",
         new_chat: "新对话",
@@ -1342,7 +1475,7 @@ const i18n = {
         
         // --- 组件 5-7 ---
         about_author: "作者 (Author)",
-        about_author_desc: "CloverAI是由 Spike8086开发一款纯本地大模型APP。",
+        about_author_desc: "CloverPal是由 Spike8086开发一款纯本地大模型APP。",
         about_disclaimer: "免责声明 (Disclaimer)",
         about_disclaimer_desc: "本应用仅提供本地计算框架，应用断网运行，绝不上传任何隐私数据。AI 生成内容不代表开发者立场，请用户自行负责。",
         btn_close: "关闭",
@@ -1403,12 +1536,16 @@ const i18n = {
         regen_confirm_title: "重新生成",
         drag_sort: "长按拖拽排序",
         ph_model_name: "模型名称",
-        sys_understood: "我明白了。"
+        sys_understood: "我明白了。",
+        more_models: "更多模型",
+        
+        edit_model_think: "支持软思考模式",
+        edit_model_think_desc: "原生支持切换思考的模型",
     },
     en: {
         set_account: "Account",
         set_username: "Username",
-        set_about: "About CloverAI",
+        set_about: "About CloverPal",
         set_language: "Language / 语言",
         lang_name: "English",
         new_chat: "New Chat",
@@ -1489,7 +1626,7 @@ const i18n = {
         
         // --- 组件 5-7 ---
         about_author: "Author",
-        about_author_desc: "CloverAI is a pure local LLM app developed by Spike8086.",
+        about_author_desc: "CloverPal is a pure local LLM app developed by Spike8086.",
         about_disclaimer: "Disclaimer",
         about_disclaimer_desc: "This app runs entirely offline and never uploads private data. AI-generated content does not represent the developer's views. Use at your own risk.",
         btn_close: "Close",
@@ -1550,9 +1687,83 @@ const i18n = {
         regen_confirm_title: "Regenerate",
         drag_sort: "Long press to drag and sort",
         ph_model_name: "Model Name",
-        sys_understood: "Understood."
+        sys_understood: "Understood.",
+        more_models: "More Models",
+        edit_model_think: "Supports Thinking",
+        edit_model_think_desc: "Model natively supports switch think or not",
     }
 };
+
+// ════════ 配置 Marked.js 代码块增强渲染 (彻底修复版) ════════
+const customRenderer = {
+  code(tokenOrCode, infostring) {
+    let rawCode = "";
+    let lang = "text";
+
+    // 1. 兼容 Marked.js V10+ 新版 API (传入的是 Token 对象)
+    if (typeof tokenOrCode === 'object' && tokenOrCode !== null) {
+      rawCode = tokenOrCode.text || "";
+      lang = tokenOrCode.lang || "text";
+    } 
+    // 2. 兼容 Marked.js 旧版 API (传入的是纯字符串)
+    else {
+      rawCode = tokenOrCode || "";
+      const langMatch = (infostring || '').match(/\S*/);
+      lang = (langMatch && langMatch[0]) ? langMatch[0] : 'text';
+    }
+
+    // 终极防御：确保获取到的绝对是字符串
+    const safeCode = typeof rawCode === 'string' ? rawCode : String(rawCode);
+    
+    // 3. 字符转义防止 HTML 注入，保护渲染引擎不崩溃
+    const escapedCode = safeCode
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+        
+    // 渲染精致的自带 Header 栏代码块
+    return `
+    <div class="code-block-wrapper">
+        <div class="code-block-header">
+            <span class="code-lang">${lang}</span>
+            <button class="code-copy-btn" onclick="copyCodeBlock(this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span>Copy</span>
+            </button>
+        </div>
+        <pre><code class="language-${lang}">${escapedCode}</code></pre>
+    </div>`;
+  }
+};
+// 启用自定义渲染器
+marked.use({ renderer: customRenderer });
+
+// ════════ 代码块一键复制功能 ════════
+function copyCodeBlock(btn) {
+    const wrapper = btn.closest('.code-block-wrapper');
+    const codeEl = wrapper.querySelector('pre code');
+    const text = codeEl.textContent; 
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Copied!</span>
+            `;
+            btn.style.color = "#4CAF50"; 
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.style.color = "";
+            }, 2000);
+        }).catch(err => {
+            console.error('复制失败', err);
+        });
+    }
+}
 
 // 获取本地保存的语言，默认中文
 let currentLang = localStorage.getItem('app_lang') || 'en';
@@ -1750,6 +1961,7 @@ currentUsername = localStorage.getItem('user_name') || 'User';
 function openUserProfile() {
     document.getElementById('editUserNameInput').value = currentUsername;
     document.getElementById('editUserBioInput').value = currentUserBio;
+    updateBioTokenCount();
     document.getElementById('userProfileOverlay').classList.add('show');
 }
 
@@ -1926,7 +2138,6 @@ function createNewChatId() {
   return 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
 function toggleSB(){document.getElementById('sb').classList.toggle('open');document.getElementById('ov').classList.toggle('show');}
-function toggleTheme(){document.body.classList.toggle('dark');}
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,140)+'px';}
 function toggleSendBtn(){document.getElementById('sendBtn').classList.toggle('on',document.getElementById('inp').value.trim().length>0);}
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
@@ -1966,18 +2177,35 @@ function resetChat() {
 }
 
 // ══ Sidebar chat list ══
-function updateSidebarChats(){
-  const c=document.getElementById('sbChats');if(!c)return;c.innerHTML='';
-  chatStore.slice(0,5).forEach(ch=>{
-    const el=document.createElement('div');
-    el.className='sb-chat'+(ch.id===currentChatId?' active':'');
-    el.dataset.chat=ch.id;el.textContent=ch.title;
-    el.onclick=()=>loadChat(ch.id);
-    el.addEventListener('contextmenu',e=>{e.preventDefault();showCtxMenu(ch.id,e.clientX,e.clientY);});
+function updateSidebarChats() {
+  const c = document.getElementById('sbChats');
+  if (!c) return;
+  c.innerHTML = '';
+  
+  // 新增排序逻辑：1. 星标优先 2. 同状态下按最新时间倒序
+  const sortedChats = [...chatStore].sort((a, b) => {
+      if (a.starred === b.starred) {
+          return b.time - a.time; // 时间新的在上面
+      }
+      return a.starred ? -1 : 1; // 星标为 true 的在上面
+  });
+
+  sortedChats.slice(0, 5).forEach(ch => {
+    const el = document.createElement('div');
+    el.className = 'sb-chat' + (ch.id === currentChatId ? ' active' : '');
+    el.dataset.chat = ch.id;
+    // 侧边栏的星标对话前面加个小星星标识，方便区分
+    el.innerHTML = (ch.starred ? '<span style="color:var(--accent);margin-right:4px;">★</span>' : '') + esc(ch.title);
+    
+    el.onclick = () => loadChat(ch.id);
+    el.addEventListener('contextmenu', e => { e.preventDefault(); showCtxMenu(ch.id, e.clientX, e.clientY); });
+    
     let lpt;
-    el.addEventListener('touchstart',e=>{lpt=setTimeout(()=>{const t=e.touches[0];showCtxMenu(ch.id,t.clientX,t.clientY);},500);},{passive:true});
-    el.addEventListener('touchend',()=>clearTimeout(lpt));
-    el.addEventListener('touchmove',()=>clearTimeout(lpt));
+    el.addEventListener('touchstart', e => {
+      lpt = setTimeout(() => { const t = e.touches[0]; showCtxMenu(ch.id, t.clientX, t.clientY); }, 500);
+    }, { passive: true });
+    el.addEventListener('touchend', () => clearTimeout(lpt));
+    el.addEventListener('touchmove', () => clearTimeout(lpt));
     c.appendChild(el);
   });
 }
@@ -2094,12 +2322,21 @@ function hdrAction(action){
   if(action==='newchat')resetChat();
 }
 
-function renameFromHeader(){
-  const chat=findChat(currentChatId);if(!chat)return;
-  const old=chat.title;
-  // 替换了原先的中文提示
-  const v=prompt(t('prompt_rename_chat'), old);
-  if(v!==null&&v.trim()){chat.title=v.trim();updateSidebarChats();}
+async function renameFromHeader(){
+  const chat = findChat(currentChatId); 
+  if(!chat) return;
+  const old = chat.title;
+  
+  // 使用高颜值 UI 弹窗代替系统 prompt
+  const v = await uiPrompt(t('prompt_rename_chat'), old);
+  
+  if(v !== null && v.trim()) {
+      chat.title = v.trim();
+      saveChat(); // 确保保存到本地
+      updateSidebarChats();
+      // 如果右上角菜单开着，更新一下菜单里的名字
+      document.getElementById('hdrMenuTitle').textContent = chat.title;
+  }
 }
 
 function editUsername(){
@@ -2131,17 +2368,35 @@ function loadChat(chatId){
 // ══ Chats Page ══
 function openChatsPage(){document.getElementById('sb').classList.remove('open');document.getElementById('ov').classList.remove('show');renderChatsList();document.getElementById('chatsPage').classList.add('open');}
 function closeChatsPage(){document.getElementById('chatsPage').classList.remove('open');document.getElementById('cpSearchInput').value='';}
-function renderChatsList(filter){
-  const list=document.getElementById('cpList');list.innerHTML='';
-  const q=(filter||'').toLowerCase();
-  const filtered=chatStore.filter(c=>c.title.toLowerCase().includes(q));
-  if(!filtered.length){list.innerHTML=`<div class="cp-empty">${t('no_matching_chats')}</div>`;return;}
-  filtered.forEach(c=>{
-    const el=document.createElement('div');
-    el.className='cp-item'+(c.id===currentChatId?' selected':'');
-    el.innerHTML=`<div class="cp-item-title">${esc(c.title)}${c.starred?'<span class="cp-item-star"> ★</span>':''}</div><div class="cp-item-time">${timeAgo(c.time)}</div>`;
-    el.onclick=e=>{if(!e.target.closest('.cp-item-rename'))loadChat(c.id);};
-    el.oncontextmenu=e=>{e.preventDefault();showCtxMenu(c.id,e.clientX,e.clientY);};
+// ══ Chats Page ══
+function renderChatsList(filter) {
+  const list = document.getElementById('cpList');
+  list.innerHTML = '';
+  const q = (filter || '').toLowerCase();
+  const filtered = chatStore.filter(c => c.title.toLowerCase().includes(q));
+  
+  // 新增排序逻辑：1. 星标优先 2. 同状态下按最新时间倒序
+  filtered.sort((a, b) => {
+      if (a.starred === b.starred) {
+          return b.time - a.time;
+      }
+      return a.starred ? -1 : 1;
+  });
+
+  if (!filtered.length) {
+      list.innerHTML = `<div class="cp-empty">${t('no_matching_chats')}</div>`;
+      return;
+  }
+  
+  filtered.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'cp-item' + (c.id === currentChatId ? ' selected' : '');
+    el.innerHTML = `
+        <div class="cp-item-title">${esc(c.title)}${c.starred ? '<span class="cp-item-star"> ★</span>' : ''}</div>
+        <div class="cp-item-time">${timeAgo(c.time)}</div>
+    `;
+    el.onclick = e => { if (!e.target.closest('.cp-item-rename')) loadChat(c.id); };
+    el.oncontextmenu = e => { e.preventDefault(); showCtxMenu(c.id, e.clientX, e.clientY); };
     list.appendChild(el);
   });
 }
@@ -2164,12 +2419,19 @@ function ctxAction(action){
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.ctx-menu')&&!e.target.closest('.hdr-menu')&&!e.target.closest('#hdrDotsBtn'))hideCtxMenu();hideHdrMenu();});
 
-function renameChatInList(chatId){
-  const chat=findChat(chatId);if(!chat)return;
-  const item=document.querySelector('.cp-item[data-id="'+chatId+'"]');
-  // 替换了原先的中文提示
-  const v=prompt(t('prompt_rename_chat'), chat.title);
-  if(v!==null&&v.trim()){chat.title=v.trim();renderChatsList();updateSidebarChats();}
+async function renameChatInList(chatId){
+  const chat = findChat(chatId); 
+  if(!chat) return;
+  
+  // 使用高颜值 UI 弹窗代替系统 prompt
+  const v = await uiPrompt(t('prompt_rename_chat'), chat.title);
+  
+  if(v !== null && v.trim()) {
+      chat.title = v.trim();
+      saveChat(); // 确保保存到本地
+      renderChatsList();
+      updateSidebarChats();
+  }
 }
 
 function toggleStar(chatId){const c=findChat(chatId);if(c){c.starred=!c.starred;renderChatsList();updateSidebarChats();}}
@@ -2269,6 +2531,7 @@ let editMode=false, editMsgIdx=-1, editMsgEl=null, msgSheetTargetIdx=-1;
 let msgSheetText='';
 
 // ════════ 渲染用户消息 ════════
+// ════════ 渲染用户消息 ════════
 function addUser(text, idx) {
   const d = document.createElement('div');
   d.className = 'msg msg-user';
@@ -2276,15 +2539,15 @@ function addUser(text, idx) {
   d.dataset.msgIdx = msgIndex;
   
   let displayHtml = '';
-  // 核心魔法：用正则匹配我们在 send() 里拼装的带文件的底层 Prompt
-  const fileRegex = /^\[已附加文件:\s*(.*?)\]\n<file_content>[\s\S]*?<\/file_content>(?:\n\n([\s\S]*))?$/;
+  // 核心魔法：放宽正则限制，兼容多种前缀以及中间不确定的空格，保护 UI 不被几万字乱码撑爆
+  const fileRegex = /^\[(?:Attached file|已附加文件|Already attach file):\s*(.*?)\]\s*\n<file_content>[\s\S]*?<\/file_content>(?:\s*\n\n([\s\S]*))?$/i;
   const match = text.match(fileRegex);
   
   if (match) {
-      const fileName = match[1];
+      const fileName = match[1].trim();
       const realText = match[2] || '';
       
-      // 渲染精致的胶囊 UI，彻底隐藏那几万字的 <file_content> 乱码
+      // 渲染精致的胶囊 UI
       const capsuleHtml = `
       <div class="file-capsule" style="margin-bottom: ${realText ? '8px' : '0'}; background: var(--bg-page); border: 1px solid var(--border); padding: 5px 12px; border-radius: 16px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-primary); max-width: 100%;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
@@ -2565,7 +2828,7 @@ async function send() {
   let finalPrompt = text;
   if (hasValidFile) {
       // 这里的格式对大模型极为友好
-      finalPrompt = `[已附加文件: ${attachedFileName}]\n<file_content>\n${attachedFileContent}\n</file_content>\n\n${text}`.trim();
+      finalPrompt = `[Attached file: ${attachedFileName}]\n<file_content>\n${attachedFileContent}\n</file_content>\n\n${text}`.trim();
       removeAttachment(); // 发送完毕后清空附件状态
   }
   
@@ -2606,7 +2869,7 @@ async function triggerRealSend(text, isRegen = false) {
   
   //  核心融合：获取当前精准时间与星期
   const now = new Date();
-  const timeStr = now.toLocaleString('zh-CN', { 
+  const timeStr = now.toLocaleString('en-US', { 
       year: 'numeric', month: 'long', day: 'numeric', 
       weekday: 'long', hour: '2-digit', minute: '2-digit' 
   });
@@ -2622,30 +2885,40 @@ async function triggerRealSend(text, isRegen = false) {
       sysP = userContext;
   }
 
-  // 1. 动态滑动窗口：根据 Context Size 精准计算
+  // ════════ 动态上下文预算分配核心算法 ════════
   const maxT = parseInt(localStorage.getItem('max_tokens') || '512');
   const ctxS = parseInt(localStorage.getItem('cfg_context_size') || '2048');
   
-  // 粗略估算 Token 消耗 (中文通常 1.5~2 个 token，英文 0.3 个。这里取安全系数 1.5)
-  const estimateTokens = (str) => Math.ceil(str.length * 1.5);
+  // 1. 动态计算【系统提示词 + 个人Bio + 时间戳】占用的绝对空间
+  const sysTokens = estimateTokens(sysP);
   
-  // 计算留给对话历史的 Token 额度 (总长度 - 生成长度 - 系统设置 - 格式标签预留)
-  let budget = ctxS - maxT - estimateTokens(sysP) - 100; 
-  if (budget < 200) budget = 200; // 最低保障额度，防止被截断
+  // 2. 各种大模型的包裹标签（如 <|im_start|>user 等）大约占据的固定长度
+  const FORMAT_WRAPPER_TOKENS = 16; 
+  
+  // 3. 计算【留给历史对话】的精确预算
+  // 公式：总上下文 - 生成上限 - 系统设定 - 基础容错 (防止边缘溢出)
+  let historyBudget = ctxS - maxT - sysTokens - 30;
+  if (historyBudget < 0) historyBudget = 0; // 如果系统设定写了上万字，历史额度直接归零
   
   let recentHistory = [];
   let currentUsedTokens = 0;
 
-  // 从最新的一条消息开始往回算，直到塞满预算为止
+  // 4. 逆向推算：从最新的对话开始往前塞入历史
   for (let i = conversation.length - 1; i >= 0; i--) {
       const msg = conversation[i];
-      const msgCost = estimateTokens(msg.content) + 15; // 15 是給 <start_of_turn> 的预留空间
+      // 当前消息的 Token = 内容 Token + 模型专属的格式标签 Token
+      const msgCost = estimateTokens(msg.content) + FORMAT_WRAPPER_TOKENS; 
       
-      if (currentUsedTokens + msgCost > budget) {
-          break; // 超出预算，停止加入更早的历史记录 (旧记忆会被自然遗忘)
+      if (currentUsedTokens + msgCost > historyBudget) {
+          // 核心防御：就算是爆表了，最新的一条提问（哪怕挂载了超大的附件）也必须被发过去！
+          // 宁愿让底层 C++ 引擎强制截断截掉一部分尾巴，也绝不能抛弃当前问题导致应用崩溃。
+          if (recentHistory.length === 0) {
+              recentHistory.unshift(msg);
+          }
+          break; // 空间用尽，果断抛弃更早的远古记忆
       }
       currentUsedTokens += msgCost;
-      recentHistory.unshift(msg); //插入到陣列頭部，保持時間順序
+      recentHistory.unshift(msg); 
   }
 
   // ════════ 核心融合：动态识别架构与 Prompt 格式化 ════════
@@ -2677,14 +2950,16 @@ async function triggerRealSend(text, isRegen = false) {
 
   // 3. 盖楼：将历史记录按架构专属格式拼装
   const lastUserIndex = recentHistory.map(m => m.role).lastIndexOf('user');
-
+  const activeModForSend = localModels.find(m => m.id === activeModelId);
+  const supportsThink = activeModForSend ? !!activeModForSend.supportsThinking : false;
+  
   for (let i = 0; i < recentHistory.length; i++) {
     let msg = recentHistory[i];
     if (msg.role === 'user') {
       let content = msg.content;
       
       //  核心连接 Extended Thinking：
-      if (i === lastUserIndex && !extendedThinking) {
+      if (i === lastUserIndex && supportsThink && !extendedThinking) {
           content += " /no_think"; 
       }
 
@@ -2751,6 +3026,7 @@ async function triggerRealSend(text, isRegen = false) {
     });
 
     const fullResponse = result.content;
+    const tTime = result.totalTime; // 新增：接收总用时
     const pSpeed = result.promptSpeed;
     const gSpeed = result.genSpeed;
     
@@ -2758,7 +3034,8 @@ async function triggerRealSend(text, isRegen = false) {
     let statsHtml = '';
     // 如果开关开了，且拿到了速度数据
     if (localStorage.getItem('cfg_show_speed') === 'true' && pSpeed && gSpeed) {
-        statsHtml = `<div class="msg-stats">Prompt: ${pSpeed} t/s | Gen: ${gSpeed} t/s</div>`;
+        // UI 格式：Time: 12.5s | Prompt: 24 t/s | Gen: 8 t/s
+        statsHtml = `<div class="msg-stats">Time: ${tTime}s | Prompt: ${pSpeed} t/s | Gen: ${gSpeed} t/s</div>`;
     }
 
     const p = d.querySelector('.text');
@@ -2835,65 +3112,212 @@ function handleDrop(e) {
     }
 }
 
+// ════════ 替换原有的 renderModelList 函数 ════════
+// ════════ 替换原有的 renderModelList 函数 ════════
 function renderModelList() {
-    const containers = [
-        document.getElementById('settingsModelList'),
-        document.getElementById('modelOptions')
-    ];
-    
-    containers.forEach(c => {
-        if (!c) return; 
-        c.innerHTML = ''; 
-        
+    // 1. 设置页面 (Settings) 的渲染保持原样 (带拖拽和删除)
+    const settingsContainer = document.getElementById('settingsModelList');
+    if (settingsContainer) {
+        settingsContainer.innerHTML = ''; 
         if (localModels.length === 0) {
-            // 原来是写死的中文，现在我们用 t() 函数动态获取
-            c.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:13px;">${t('empty_model_list')}</div>`; 
-            return;
+            settingsContainer.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:13px;">${t('empty_model_list')}</div>`; 
+        } else {
+            localModels.forEach(m => {
+                const isSel = m.id === activeModelId;
+                const el = document.createElement('div');
+                el.className = 'model-option' + (isSel ? ' selected' : '');
+                el.style.padding = "10px 16px"; 
+                el.style.display = "flex";
+                el.style.alignItems = "center";
+                
+                el.draggable = true;
+                el.dataset.id = m.id;
+                el.addEventListener('dragstart', handleDragStart);
+                el.addEventListener('dragover', handleDragOver);
+                el.addEventListener('dragleave', handleDragLeave);
+                el.addEventListener('drop', handleDrop);
+                el.addEventListener('dragend', handleDragEnd);
+                
+                el.innerHTML = `
+                  <div style="cursor:grab; padding-right:12px; color:var(--text-muted);" title="${t('drag_sort')}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="16" x2="20" y2="16"/></svg>
+                  </div>
+                  <div class="mo-info" style="flex:1;">
+                    <div class="mo-name" style="font-size:14px;">${esc(m.name)}</div>
+                    <div class="mo-desc" style="font-size:11px;">${esc(m.desc || 'Local GGUF')}</div>
+                  </div>
+                  <div style="display:flex; gap:12px; align-items:center;">
+                      ${isSel ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--accent);"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+                      <button onclick="openModelEdit(event, '${m.id}')" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;padding:4px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      <button onclick="deleteLocalModel(event, '${m.id}')" style="background:none;border:none;color:#D94F4F;cursor:pointer;padding:4px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                  </div>
+                `;
+                el.onclick = (e) => { if(!e.target.closest('button')) switchModel(m.id); };
+                settingsContainer.appendChild(el);
+            });
         }
-        
-        localModels.forEach(m => {
-            const isSel = m.id === activeModelId;
-            const el = document.createElement('div');
-            el.className = 'model-option' + (isSel ? ' selected' : '');
-            el.style.padding = "10px 16px"; 
-            el.style.display = "flex";
-            el.style.alignItems = "center";
-            el.style.transition = "background 0.2s, opacity 0.2s";
-            
-            // 👉 挂载 HTML5 拖拽属性和事件监听
-            el.draggable = true;
-            el.dataset.id = m.id;
-            el.addEventListener('dragstart', handleDragStart);
-            el.addEventListener('dragover', handleDragOver);
-            el.addEventListener('dragleave', handleDragLeave);
-            el.addEventListener('drop', handleDrop);
-            el.addEventListener('dragend', handleDragEnd);
-            
-            el.innerHTML = `
-          <div style="cursor:grab; padding-right:12px; color:var(--text-muted);" title="${t('drag_sort')}">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="16" x2="20" y2="16"/></svg>
-          </div>
-          <div class="mo-info" style="flex:1;">
-            <div class="mo-name" style="font-size:14px;">${esc(m.name)}</div>
-            <div class="mo-desc" style="font-size:11px;">${esc(m.desc || 'Local GGUF')}</div>
-          </div>
-          </div>
-          <div style="display:flex; gap:12px; align-items:center;">
-              ${isSel ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--accent);"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
-              
-              <button onclick="openModelEdit(event, '${m.id}')" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;padding:4px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              </button>
-              <button onclick="deleteLocalModel(event, '${m.id}')" style="background:none;border:none;color:#D94F4F;cursor:pointer;padding:4px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-              </button>
-          </div>
-      `;
-            el.onclick = (e) => { if(!e.target.closest('button')) switchModel(m.id); };
-            c.appendChild(el);
-        });
-    });
+    }
+
+    // 清理 HTML 中残留的重复节点 (防止导致 UI 错位)
+    const sheets = document.querySelectorAll('#modelSheet');
+    if (sheets.length > 1) {
+        for (let i = 1; i < sheets.length; i++) {
+            sheets[i].remove();
+        }
+    }
+
+    // === 核心修复：定义 thinkDisplay，用于控制是否显示思考模式开关 ===
+    const activeModForDisplay = localModels.find(m => m.id === activeModelId);
+    const supportsThink = activeModForDisplay ? !!activeModForDisplay.supportsThinking : false;
+    const thinkDisplayRow = supportsThink ? 'flex' : 'none';  // flex 以防破坏了内部两端对齐布局
+    const thinkDisplayDivider = supportsThink ? 'block' : 'none';
+
+    // 2. 动态接管并重构 `#modelSheet` 的内部结构 (生成滑动视口)
+    const sheet = document.getElementById('modelSheet');
+    if (sheet && !document.getElementById('msWrapper')) {
+        // 彻底清空原有结构，注入支持画中画滑动的视图
+        sheet.innerHTML = `
+            <div class="sheet-handle"></div>
+            <div id="msWrapper" class="ms-wrapper">
+                <!-- 视图 A: 主菜单 -->
+                <div class="ms-view" id="msMainView">
+                    <div class="sheet-hdr" style="padding-bottom: 8px;">
+                        <button class="sheet-close" onclick="closeModelSheet()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                        <div class="sheet-title">${t('select_model_title')}</div>
+                        <div style="width:32px"></div>
+                    </div>
+                    <div class="ms-main-scroll">
+                        <div id="msQuickList"></div>
+                        <!-- 这里的显示状态受模型设置控制 -->
+                        <div class="sheet-divider" id="msThinkDivider" style="display: ${thinkDisplayDivider};"></div>
+                        <div class="toggle-row" id="msThinkRow" style="padding: 12px 24px; display: ${thinkDisplayRow};">
+                            <div class="toggle-info">
+                                <div class="toggle-label">${t('thinking_mode')}</div>
+                                <div class="toggle-desc">${t('think_longer')}</div>
+                            </div>
+                            <button class="toggle-switch ${extendedThinking ? 'on' : ''}" id="extToggle" onclick="toggleExtended()"></button>
+                        </div>
+                        <div id="msMoreBtnBox"></div>
+                    </div>
+                </div>
+
+                <!-- 视图 B: 更多模型 (滑入) -->
+                <div class="ms-view" id="msMoreView">
+                    <div class="sheet-hdr" style="padding-bottom: 8px;">
+                        <!-- 左上角的返回箭头 -->
+                        <button class="sheet-close" onclick="slideModelSheet(false)">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                        <div class="sheet-title">${t('more_models')}</div>
+                        <div style="width:32px"></div>
+                    </div>
+                    <div class="ms-more-scroll" id="msAllList" style="padding-bottom: 20px;"></div>
+                </div>
+
+            </div>
+        `;
+    } else if (document.getElementById('msWrapper')) {
+        // 如果包裹层已经存在了，我们需要手动更新它的显示状态，避免切换模型时开关不消失
+        const divider = document.getElementById('msThinkDivider');
+        const row = document.getElementById('msThinkRow');
+        const toggleBtn = document.getElementById('extToggle');
+        if (divider) divider.style.display = thinkDisplayDivider;
+        if (row) row.style.display = thinkDisplayRow;
+        if (toggleBtn) toggleBtn.className = 'toggle-switch' + (extendedThinking ? ' on' : '');
+    }
+
+    // 3. 渲染主视图的快捷列表 (最多 4 个) 和 滑动页的全部列表
+    const quickList = document.getElementById('msQuickList');
+    const allList = document.getElementById('msAllList');
+    const moreBtnBox = document.getElementById('msMoreBtnBox');
+
+    if (quickList && allList && moreBtnBox) {
+        quickList.innerHTML = '';
+        allList.innerHTML = '';
+        moreBtnBox.innerHTML = '';
+
+        if (localModels.length === 0) {
+            quickList.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:13px;">${t('empty_model_list')}</div>`;
+            allList.innerHTML = quickList.innerHTML;
+        } else {
+            // 快捷列表逻辑：智能选取 4 个，保证当前选中的一定在里面
+            let displayModels = [];
+            if (activeModelId && !localModels.slice(0, 3).some(m => m.id === activeModelId)) {
+                const activeMod = localModels.find(m => m.id === activeModelId);
+                const others = localModels.filter(m => m.id !== activeModelId);
+                displayModels = [activeMod, ...others].slice(0, 4);
+            } else {
+                displayModels = localModels.slice(0, 4);
+            }
+
+            // 封装：生成紧凑模型列表项 HTML (仅含编辑，无删除和拖拽)
+            const createModelItem = (m) => {
+                const isSel = m.id === activeModelId;
+                const el = document.createElement('div');
+                el.className = 'sheet-model-item' + (isSel ? ' selected' : '');
+                el.innerHTML = `
+                    <div class="mo-info">
+                        <div class="mo-name">${esc(m.name)}</div>
+                        <div class="mo-desc">${esc(m.desc || 'Local GGUF')}</div>
+                    </div>
+                    <div class="sheet-model-actions">
+                        <button class="sheet-model-btn" onclick="openModelEdit(event, '${m.id}')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        ${isSel ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' : '<div style="width:18px;"></div>'}
+                    </div>
+                `;
+                el.onclick = (e) => { if(!e.target.closest('button')) switchModel(m.id); };
+                return el;
+            };
+
+            // 填充主视图 (前 4 个)
+            displayModels.forEach(m => {
+                if(m) quickList.appendChild(createModelItem(m));
+            });
+
+            // 填充滑动子页 (全部)
+            localModels.forEach(m => {
+                allList.appendChild(createModelItem(m));
+            });
+
+            // 当模型 > 4 个时，在思考模式下方动态追加“更多模型”按钮
+            if (localModels.length > 4) {
+                moreBtnBox.innerHTML = `
+                    <div class="sheet-divider" style="margin-top:0;"></div>
+                    <div class="ms-more-btn" onclick="slideModelSheet(true)">
+                        <span>${t('more_models')}</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                `;
+            }
+        }
+    }
 }
+
+// 控制左右滑动的函数
+window.slideModelSheet = function(showMore) {
+    const wrapper = document.getElementById('msWrapper');
+    if (wrapper) {
+        wrapper.style.transform = showMore ? 'translateX(-50%)' : 'translateX(0)';
+    }
+};
+
+// 覆写原先的 closeModelSheet，确保关闭面板时视口能归位
+window.closeModelSheet = function() {
+    document.getElementById('sheetOv').classList.remove('show');
+    document.getElementById('modelSheet').classList.remove('show');
+    // 等待面板滑下去后，重置成主视图，避免下次打开直接看到第二页
+    setTimeout(() => {
+        slideModelSheet(false);
+    }, 300);
+};
 
 // 专属的卡片选项弹窗控制器
 let importResolve = null;
@@ -3035,11 +3459,14 @@ window.onload = async () => {
     }
 };
 
-// 统一处理顶部标题和 Extended 标志 (已去除架构 Tag)
+// 统一处理顶部标题和 Extended 标志 (仅支持思考的模型才显示 Think 标志)
 function updateTopName() {
     const mod = localModels.find(m => m.id === activeModelId);
     const name = mod ? mod.name : t('model_top_select');
-    const ext = extendedThinking ? ' <span class="model-ext">Think</span>' : '';
+    // 判断当前模型是否支持思考
+    const supportsThink = mod ? !!mod.supportsThinking : false;
+    
+    const ext = (supportsThink && extendedThinking) ? ' <span class="model-ext">Think</span>' : '';
     document.getElementById('modelName').innerHTML = esc(name) + ext;
 }
 
@@ -3180,6 +3607,12 @@ function openModelEdit(e, id) {
     document.getElementById('editModelDesc').value = mod.desc || '';
     document.getElementById('editModelSysPrompt').value = mod.systemPrompt || '';
     
+    // 回显：支持思考模式的开关
+    const thinkToggle = document.getElementById('editModelThinkToggle');
+    if (thinkToggle) {
+        thinkToggle.classList.toggle('on', !!mod.supportsThinking);
+    }
+    
     document.getElementById('editModelFileName').innerText = mod.fileName || t('edit_unknown');
     document.getElementById('editModelSize').innerText = mod.size || t('edit_unknown');
     
@@ -3204,12 +3637,8 @@ function openModelEdit(e, id) {
             storageSpan.style.color = '#fff';
         }
     }
+    updateSysTokenCount(); // 新增：打开时刷新计数
     document.getElementById('modelEditOverlay').classList.add('show');
-}
-
-function closeModelEdit() {
-    document.getElementById('modelEditOverlay').classList.remove('show');
-    editingModelId = null;
 }
 
 function saveModelEdit() {
@@ -3220,11 +3649,20 @@ function saveModelEdit() {
         mod.desc = document.getElementById('editModelDesc').value.trim();
         mod.systemPrompt = document.getElementById('editModelSysPrompt').value;
         
+        // 保存：支持思考模式的开关
+        const thinkToggle = document.getElementById('editModelThinkToggle');
+        mod.supportsThinking = thinkToggle ? thinkToggle.classList.contains('on') : false;
+        
         localStorage.setItem('local_models', JSON.stringify(localModels));
         renderModelList(); 
         updateTopName();   
     }
     closeModelEdit();
+}
+
+function closeModelEdit() {
+    document.getElementById('modelEditOverlay').classList.remove('show');
+    editingModelId = null;
 }
 
 // 控制测速显示的开关逻辑
@@ -3236,6 +3674,23 @@ function toggleSpeedSetting() {
 
 // 记得在 openSettings() 函数里加上这行，让开关每次打开时正确回显：
 document.getElementById('speedToggle').classList.toggle('on', localStorage.getItem('cfg_show_speed') === 'true');
+
+// 统一的 Token 估算器（中文字符大约 1.5 token，英文更少，这里统一给安全阈值）
+const estimateTokens = (str) => Math.ceil((str || '').length * 1.5);
+
+// 更新 Bio 的 Token 数量
+function updateBioTokenCount() {
+    const el = document.getElementById('editUserBioInput');
+    const cnt = document.getElementById('bioTokenCount');
+    if(el && cnt) cnt.innerText = estimateTokens(el.value) + ' tk';
+}
+
+// 更新 系统提示词 的 Token 数量
+function updateSysTokenCount() {
+    const el = document.getElementById('editModelSysPrompt');
+    const cnt = document.getElementById('sysTokenCount');
+    if(el && cnt) cnt.innerText = estimateTokens(el.value) + ' tk';
+}
 </script>
 </body>
 </html>
