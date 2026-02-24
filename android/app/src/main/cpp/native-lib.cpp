@@ -242,9 +242,12 @@ Java_com_example_app_LlamaPlugin_nativeGenerate(JNIEnv *env, jobject thiz, jstri
     double gen_ms = std::chrono::duration<double, std::milli>(t_gen_end - t_gen_start).count();
     double gen_speed = (gen_ms > 0) ? (gen_count / (gen_ms / 1000.0)) : 0.0;
     // ════════ 把测速结果伪装成暗号拼在最后面 ════════
+    // 计算总用时 (秒) = (解码耗时 + 生成耗时) / 1000
+    double total_time_sec = (prompt_ms + gen_ms) / 1000.0;
+
     char stats_buf[128];
-    // 格式例如：[CLOVER_STATS|24.50|8.32]
-    snprintf(stats_buf, sizeof(stats_buf), "[CLOVER_STATS|%.2f|%.2f]", prompt_speed, gen_speed);
+    // 格式例如：[CLOVER_STATS|15.42|24.50|8.32] -> [总用时|解码速度|生成速度]
+    snprintf(stats_buf, sizeof(stats_buf), "[CLOVER_STATS|%.2f|%.2f|%.2f]", total_time_sec, prompt_speed, gen_speed);
     result += std::string(stats_buf);
 
     llama_batch_free(batch);
