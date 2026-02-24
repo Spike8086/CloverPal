@@ -21,47 +21,93 @@ import android.provider.Settings;
 
 @CapacitorPlugin(name = "Llama")
 public class LlamaPlugin extends Plugin {
-    // 1. 必须在类级别定义这个变量，否则方法里找不到它
     private boolean isGenerating = false;
+
+    // ════════ 核心修复：用于暂存被截断的半个中文字符 ════════
+    private byte[] leftoverBytes = new byte[0];
 
     static {
         System.loadLibrary("clover-bridge");
     }
 
     public native String nativeLoadModel(String path);
-
-    // 确保这里是 byte[]，对应 C++ 的安全返回
     public native byte[] nativeGenerate(String prompt, int maxTokens, String systemPrompt, int contextSize, int threads);
+    public native void nativeStop();
 
-    public native void nativeStop(); // 声明 C++ 的停止方法
-
-    // 暴露给前端 JS 的中断接口
     @PluginMethod
     public void stop(PluginCall call) {
         nativeStop();
         isGenerating = false;
+        leftoverBytes = new byte[0]; // 停止时清空残留
         call.resolve();
     }
 
-    // 【修改版】接收 C++ 的流式数据，并强制在 UI 主线程推送给网页
-    public void onTokenGenerated(byte[] bytes) {
+    // 【核心修复版】智能 UTF-8 字节缝合器
+    public void onTokenGenerated(byte[] newBytes) {
         try {
-            // 解析字节流
-            String text = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
-            JSObject ret = new JSObject();
-            ret.put("text", text);
+            // 1. 拼接上次残留的字节
+            byte[] combined = new byte[leftoverBytes.length + newBytes.length];
+            System.arraycopy(leftoverBytes, 0, combined, 0, leftoverBytes.length);
+            System.arraycopy(newBytes, 0, combined, leftoverBytes.length, newBytes.length);
 
-            // 【核心修复】：必须强制在安卓主线程发送事件，前端网页才会立刻产生打字机视觉效果！
-            if (getActivity() != null) {
-                getActivity().runOnUiThread(() -> {
-                    notifyListeners("onToken", ret);
-                });
+            // 2. 寻找完整的 UTF-8 边界
+            int validLength = combined.length;
+            int i = combined.length - 1;
+
+            // 最多往回找 4 个字节 (UTF-8 的最大长度)
+            while (i >= 0 && i > combined.length - 4) {
+                byte b = combined[i];
+                if ((b & 0x80) == 0) {
+                    // 单字节 ASCII，边界完整
+                    break;
+                } else if ((b & 0xC0) == 0xC0) {
+                    // 找到多字节字符的头部字节
+                    int expectedLen = 0;
+                    if ((b & 0xE0) == 0xC0) expectedLen = 2; // 110xxxxx
+                    else if ((b & 0xF0) == 0xE0) expectedLen = 3; // 1110xxxx (中文字符常用)
+                    else if ((b & 0xF8) == 0xF0) expectedLen = 4; // 11110xxx (Emoji 常用)
+
+                    if (combined.length - i < expectedLen) {
+                        // 如果尾部的字节数不够拼出这个字符，说明被截断了
+                        validLength = i;
+                    }
+                    break;
+                }
+                i--;
+            }
+
+            // 3. 如果连一个完整的字符都拼不出来，全部存入残留，等待下个包
+            if (validLength == 0) {
+                leftoverBytes = combined;
+                return;
+            }
+
+            // 4. 提取出完整的字节进行解码
+            byte[] validBytes = new byte[validLength];
+            System.arraycopy(combined, 0, validBytes, 0, validLength);
+
+            // 5. 将剩下不完整的字节保存，留给下次回调
+            leftoverBytes = new byte[combined.length - validLength];
+            System.arraycopy(combined, validLength, leftoverBytes, 0, leftoverBytes.length);
+
+            // 6. 转换为 String，此时发送给前端的文本绝对不会出现
+            String text = new String(validBytes, StandardCharsets.UTF_8);
+
+            if (!text.isEmpty()) {
+                JSObject ret = new JSObject();
+                ret.put("text", text);
+
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        notifyListeners("onToken", ret);
+                    });
+                }
             }
         } catch (Exception e) {
-            // 忽略由于半个汉字导致的临时解析异常
+            // 忽略异常
         }
     }
-    // 核心修復 1：放入子線程，防止切換模型時 App 假死
+
     @PluginMethod
     public void load(PluginCall call) {
         new Thread(() -> {
@@ -70,21 +116,17 @@ public class LlamaPlugin extends Plugin {
                 String path = call.getString("path");
                 String realPathToLoad = path;
 
-                // 🌟 核心魔法 3：如果是外部导入的 content:// 文件
                 if (path != null && path.startsWith("content://")) {
                     Uri uri = Uri.parse(path);
-                    // 1. 在 Java 层打开这个外部文件，拿到系统的底层句柄 (File Descriptor)
                     pfd = getContext().getContentResolver().openFileDescriptor(uri, "r");
                     if (pfd != null) {
                         int fd = pfd.getFd();
-                        // 2. 利用 Linux 万物皆文件的特性，把句柄伪装成绝对路径喂给 C++！
                         realPathToLoad = "/proc/self/fd/" + fd;
                     } else {
                         call.reject("无法打开外部文件描述符");
                         return;
                     }
                 } else {
-                    // 兼容你以前复制到私有目录的旧模型
                     File f = new File(path);
                     if (!f.exists()) {
                         call.reject("实体文件不存在，可能已被删除");
@@ -94,7 +136,6 @@ public class LlamaPlugin extends Plugin {
 
                 String result = nativeLoadModel(realPathToLoad);
 
-                // C++ 的 fopen 已经成功复制了句柄，Java 这边的原始句柄可以安全关闭了
                 if (pfd != null) {
                     pfd.close();
                 }
@@ -118,11 +159,9 @@ public class LlamaPlugin extends Plugin {
     @PluginMethod
     public void checkStoragePermission(PluginCall call) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            // 检查是否已拥有最高文件管理权限
             if (!Environment.isExternalStorageManager()) {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                 intent.setData(Uri.parse("package:" + getContext().getPackageName()));
-                // 跳转到系统设置页，让用户亲自打开开关
                 getActivity().startActivity(intent);
 
                 JSObject ret = new JSObject();
@@ -131,23 +170,20 @@ public class LlamaPlugin extends Plugin {
                 return;
             }
         }
-        // 已经有权限，直接放行
         JSObject ret = new JSObject();
         ret.put("granted", true);
         call.resolve(ret);
     }
-    // 核心修復 2：提供給前端真正刪除幾十 GB 實體檔案的能力
+
     @PluginMethod
     public void deleteFile(PluginCall call) {
         String path = call.getString("path");
         if (path != null) {
             if (path.startsWith("content://")) {
-                // 如果是外部文件，不要去删实体文件！只释放我们申请的读取权限即可。
                 try {
                     getContext().getContentResolver().releasePersistableUriPermission(Uri.parse(path), Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 } catch (Exception ignored) {}
             } else {
-                // 只有旧的、被复制进私有目录的文件，才执行物理删除释放空间
                 File file = new File(path);
                 if (file.exists()) {
                     file.delete();
@@ -164,10 +200,11 @@ public class LlamaPlugin extends Plugin {
             return;
         }
 
-        String prompt = call.getString("prompt");
-        // 【修改点 2】从 JS 获取 maxTokens 参数，默认给 256
-        Integer maxTokens = call.getInt("maxTokens", 256);
+        // ════════ 核心修改：开始新对话前，确保清空上一次的残余字节 ════════
+        leftoverBytes = new byte[0];
 
+        String prompt = call.getString("prompt");
+        Integer maxTokens = call.getInt("maxTokens", 256);
         String systemPrompt = call.getString("systemPrompt", "");
         Integer contextSize = call.getInt("contextSize", 1024);
         Integer threads = call.getInt("threads", 4);
@@ -175,7 +212,6 @@ public class LlamaPlugin extends Plugin {
 
         new Thread(() -> {
             try {
-                // 【修改点 3】将 maxTokens 传给 C++
                 byte[] bytes = nativeGenerate(prompt, maxTokens, systemPrompt, contextSize, threads);
 
                 if (bytes == null || bytes.length == 0) {
@@ -183,32 +219,32 @@ public class LlamaPlugin extends Plugin {
                     return;
                 }
 
-                String response = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+                String response = new String(bytes, StandardCharsets.UTF_8);
+                String totalTime = "0.0"; // 新增总耗时
                 String pSpeed = "0.0";
                 String gSpeed = "0.0";
 
-                // ════════ 拦截 C++ 发来的测速暗号 ════════
                 String tokenMarker = "[CLOVER_STATS|";
                 int markerIdx = response.lastIndexOf(tokenMarker);
                 if (markerIdx != -1) {
                     int endIdx = response.lastIndexOf("]");
                     if (endIdx > markerIdx) {
-                        // 提取出 24.50|8.32
                         String statsStr = response.substring(markerIdx + tokenMarker.length(), endIdx);
                         String[] parts = statsStr.split("\\|");
-                        if (parts.length == 2) {
-                            pSpeed = parts[0];
-                            gSpeed = parts[1];
+                        if (parts.length == 3) { // 变成 3 个参数
+                            totalTime = parts[0];
+                            pSpeed = parts[1];
+                            gSpeed = parts[2];
                         }
-                        // 切掉暗号，保证用户看到的文本是干净的
                         response = response.substring(0, markerIdx);
                     }
                 }
 
                 JSObject ret = new JSObject();
                 ret.put("content", response);
-                ret.put("promptSpeed", pSpeed); // 传给前端 JS
-                ret.put("genSpeed", gSpeed);    // 传给前端 JS
+                ret.put("totalTime", totalTime); // 传给 JS
+                ret.put("promptSpeed", pSpeed);
+                ret.put("genSpeed", gSpeed);
                 call.resolve(ret);
             } catch (Exception e) {
                 call.reject("發生異常: " + e.getMessage());
@@ -225,6 +261,7 @@ public class LlamaPlugin extends Plugin {
         intent.setType("*/*");
         startActivityForResult(call, intent, "pickModelResult");
     }
+
     @ActivityCallback
     private void pickModelResult(PluginCall call, ActivityResult result) {
         if (call == null) return;
@@ -245,15 +282,11 @@ public class LlamaPlugin extends Plugin {
                         cursor.close();
                     }
                     String sizeStr = String.format("%.2f GB", sizeBytes / 1073741824.0);
-
-                    // 🌟 获取前端传来的模式："copy" (内部) 或 "link" (外部)
                     String mode = call.getString("mode", "link");
 
                     if ("copy".equals(mode)) {
-                        // 【模式一：复制到内部沙盒】
                         final String fOriginalName = originalName;
                         final String fSizeStr = sizeStr;
-                        // 开启后台线程复制文件，防止阻塞主界面
                         new Thread(() -> {
                             try {
                                 InputStream is = getContext().getContentResolver().openInputStream(uri);
@@ -271,7 +304,7 @@ public class LlamaPlugin extends Plugin {
                                 ret.put("path", outFile.getAbsolutePath());
                                 ret.put("size", fSizeStr);
                                 ret.put("originalName", fOriginalName);
-                                ret.put("storageType", "internal"); // 打上内部标签
+                                ret.put("storageType", "internal");
                                 call.resolve(ret);
                             } catch (Exception e) {
                                 call.reject("复制文件失败: " + e.getMessage());
@@ -279,7 +312,6 @@ public class LlamaPlugin extends Plugin {
                         }).start();
 
                     } else {
-                        // 【模式二：0秒外部链接直读】
                         final int takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION;
                         getContext().getContentResolver().takePersistableUriPermission(uri, takeFlags);
 
@@ -287,7 +319,7 @@ public class LlamaPlugin extends Plugin {
                         ret.put("path", uri.toString());
                         ret.put("size", sizeStr);
                         ret.put("originalName", originalName);
-                        ret.put("storageType", "external"); // 打上外部标签
+                        ret.put("storageType", "external");
                         call.resolve(ret);
                     }
                 } catch (Exception e) {
