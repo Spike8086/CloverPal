@@ -20,7 +20,7 @@ CloverPal is an **Android** application designed for **local/offline Large** Lan
 * Model Architecture Compatibility: Supports modern architectures including the Qwen3.5 architecture, Qwen3's Soft Thinking mechanism, and the Gemma3n series.
 * Dual-Language Support: The application interface is available in both English and Simplified Chinese.
 * Latex Support: Support the expression of Latex using KaTeX.
-* HTML Preview: Allow user to have a preview to the html code like a broweser.
+* HTML Preview: Allow user to have a preview to the html code like a browser.
 
 <p align="center">
   <img src="assets/Clover1.jpg" width="260" alt="Home Screen">
