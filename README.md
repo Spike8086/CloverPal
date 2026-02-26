@@ -19,7 +19,7 @@ CloverPal is an **Android** application designed for **local/offline Large** Lan
 * Model Storage Options: Supports importing models via external storage direct-read mode (to save device space) or internal copy mode (for file stability).
 * Model Architecture Compatibility: Supports modern architectures including the Qwen3.5 architecture, Qwen3's Soft Thinking mechanism, and the Gemma3n series.
 * Dual-Language Support: The application interface is available in both English and Simplified Chinese.
-* Latex Support: Support the expression of Latex using KaTeX.
+* Latex Support: Support the expression of **LaTeX** using KaTeX.
 * HTML Preview: Allow user to have a preview to the html code like a browser.
 
 <p align="center">
@@ -61,6 +61,6 @@ CloverPal is built using the amazing work from:
 * **[Capacitor](https://capacitorjs.com/)**: The cross-platform native runtime powering the mobile experience using web technologies.
 * **[marked](https://github.com/markedjs/marked)**: A low-level markdown compiler used for rendering chat responses.
 * **[mammoth.js](https://github.com/mwilliamson/mammoth.js)**: Enables text extraction and parsing from document (.docx) files.
-* **[KaTeX.js](https://github.com/KaTeX/KaTeX)**: Enable render Latex expression.
+* **[KaTeX.js](https://github.com/KaTeX/KaTeX)**: Enable render LaTeX expression.
   
 And many other open source libraries that make this project possible!
