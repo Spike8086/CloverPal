@@ -62,4 +62,5 @@ CloverPal is built using the amazing work from:
 * **[marked](https://github.com/markedjs/marked)**: A low-level markdown compiler used for rendering chat responses.
 * **[mammoth.js](https://github.com/mwilliamson/mammoth.js)**: Enables text extraction and parsing from document (.docx) files.
 * **[KaTeX.js](https://github.com/KaTeX/KaTeX)**: Enable render Latex expression.
+  
 And many other open source libraries that make this project possible!
