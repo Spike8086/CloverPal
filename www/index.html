@@ -4,15 +4,58 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>Clover</title>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<style>
 
-:root { --bg-page: #F3EDE5; --bg-chat: #FAF7F2; --bg-sidebar: #F3EDE5; --bg-input: #FFFFFF; --bg-user-bubble: #E8E0D5; --bg-hover: rgba(0,0,0,0.04); --text-primary: #1F1E1B; --text-secondary: #6B6560; --text-muted: #AEA89F; --accent: var(--accent); --border: #E2DBD1; --input-shadow: 0 1px 12px rgba(0,0,0,0.06); --scrollbar-thumb: #D5CFC5; }
+<!-- 1. 离线引入 Markdown & Docx 解析器 -->
+<script src="./assets/js/marked.min.js"></script>
+<script src="./assets/js/mammoth.browser.min.js"></script>
+
+<!-- 2. 离线引入 KaTeX 公式渲染器 (CSS与JS) -->
+<link rel="stylesheet" href="./assets/css/katex.min.css">
+<script defer src="./assets/js/katex.min.js"></script>
+
+<style>
+/* ================= 声明本地离线字体 ================= */
+
+/* 1. 声明 Noto Sans SC (常规体 400) */
+@font-face {
+    font-family: 'Noto Sans SC';
+    src: url('./assets/fonts/NotoSansSC-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* 2. 声明 Noto Sans SC (中黑体 500) */
+@font-face {
+    font-family: 'Noto Sans SC';
+    src: url('./assets/fonts/NotoSansSC-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* 3. 声明 Source Serif 4 (常规体 400) */
+@font-face {
+    font-family: 'Source Serif 4';
+    src: url('./assets/fonts/SourceSerif4-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* 4. 声明 Source Serif 4 (半粗体 600) */
+@font-face {
+    font-family: 'Source Serif 4';
+    src: url('./assets/fonts/SourceSerif4-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root { --bg-page: #F3EDE5; --bg-chat: #FAF7F2; --bg-sidebar: #F3EDE5; --bg-input: #FFFFFF; --bg-user-bubble: #E8E0D5; --bg-hover: rgba(0,0,0,0.04); --text-primary: #1F1E1B; --text-secondary: #6B6560; --text-muted: #AEA89F; --accent: var(--accent); --border: #E2DBD1; --input-shadow: 0 1px 12px rgba(0,0,0,0.06); --scrollbar-thumb: #D5CFC5;--font-size-sys: 15px; --font-size-user: 15px; --font-size-ai: 16px; }
 .dark { --bg-page: #191714; --bg-chat: #191714; --bg-sidebar: #191714; --bg-input: #2A2622; --bg-user-bubble: #35302B; --bg-hover: rgba(255,255,255,0.06); --text-primary: #E5DFD6; --text-secondary: #938E86; --text-muted: #5C5750; --border: #2E2A25; --input-shadow: 0 1px 12px rgba(0,0,0,0.25); --scrollbar-thumb: #3A3530; }
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; font-weight: 400; font-size: 15px; line-height: 1.6; background: var(--bg-page); color: var(--text-primary); height: 100dvh; overflow: hidden; transition: background 0.3s, color 0.3s; -webkit-font-smoothing: antialiased; }
+body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; font-weight: 400; font-size: var(--font-size-sys); line-height: 1.6; background: var(--bg-page); color: var(--text-primary); height: 100dvh; overflow: hidden; transition: background 0.3s, color 0.3s; -webkit-font-smoothing: antialiased; }
 @media (min-width: 768px) { body { display: flex; } }
 .sidebar { position: fixed; left:0; top:0; bottom:0; width: 272px; background: var(--bg-sidebar); border-right: 1px solid var(--border); padding: 24px 16px; padding-top: calc(env(safe-area-inset-top) + 24px); display: flex; flex-direction: column; z-index: 200; transform: translateX(-100%); transition: transform 0.28s cubic-bezier(.4,0,.2,1), background 0.3s; }
 .sidebar.open { transform: translateX(0); }
@@ -65,7 +108,7 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
 .msg { margin-bottom:20px; animation:msgIn 0.3s ease; }
 @keyframes msgIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 .msg-user { display:flex; justify-content:flex-end; }
-.msg-user .bubble { background:var(--bg-user-bubble); padding:10px 16px; border-radius:18px 18px 4px 18px; max-width:78%; font-size:15px; line-height:1.6; word-break:break-word; }
+.msg-user .bubble { background:var(--bg-user-bubble); padding:10px 16px; border-radius:18px 18px 4px 18px; max-width:78%; font-size: var(--font-size-user); line-height:1.6; word-break:break-word; }
 .msg-ai { display:flex; gap:10px; align-items:flex-start; }
 .msg-ai .av { width:26px; height:26px; flex-shrink:0; margin-top:2px; }
 .msg-ai .av svg { width:100%; height:100%; }
@@ -207,8 +250,7 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
   /* 1. 回退字体：使用无衬线体 (Noto Sans SC) */
   font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif !important;
   
-  /* 2. 强制加大字号 (原 15px -> 16px) */
-  font-size: 16px !important; 
+  font-size: var(--font-size-ai) !important;
   
   /* 3. 调整行高，阅读更舒适 */
   line-height: 1.65 !important;
@@ -220,14 +262,14 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
 
 /* 针对段落 p 标签也强制设置 */
 .msg-ai .text p {
-  font-size: 17px !important;
+  font-size: calc(var(--font-size-ai) + 1px) !important;
   margin-bottom: 0.8em;
 }
 
 /* 针对代码块，保持等宽字体 */
 .msg-ai .text pre, .msg-ai .text code {
   font-family: 'Menlo', 'Monaco', 'Consolas', monospace !important;
-  font-size: 14px !important; /* 代码稍微小一点 */
+  font-size: calc(var(--font-size-ai) - 2px) !important;
 }
 /* 行内代码 */
 .msg-ai .text code {
@@ -774,6 +816,167 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
   border-radius: 0 !important;
 }
 
+/* === LaTeX 公式增强 UI === */
+.katex-display-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 12px 0;
+  padding: 8px 0;
+}
+/* KaTeX 字体颜色自动跟随主题的文本颜色 */
+.katex {
+  color: var(--text-primary);
+}
+.katex-display-wrapper .katex-display {
+  margin: 0 !important;
+}
+.msg-ai .text .katex-display-wrapper {
+  background: rgba(0,0,0,0.02);
+  border-radius: 8px;
+  padding: 10px;
+}
+.dark .msg-ai .text .katex-display-wrapper {
+  background: rgba(255,255,255,0.02);
+}
+
+/* ==========================================
+   🌟 系统字体大小：强制覆盖层 🌟
+   ========================================== */
+
+/* 1. 标准系统字号 (完全跟随滑块) - 涵盖输入框、设置项、侧边栏、菜单、按钮等 */
+.chat-input, .sb-item, .sb-chat, .sb-name, .sb-name-input, 
+.set-item-label, .toggle-label, .mo-name, .cp-item-title, .cp-search input, 
+.cp-fab, .ctx-item, .del-btn, .del-dialog p, .msg-sheet-item, 
+.ui-dialog-input, .import-opt-btn .opt-title, .code-copy-btn, .think-summary,
+.model-sel, .sb-bottom .sb-user, .set-input, .set-input-group input {
+    font-size: var(--font-size-sys) !important;
+}
+
+/* 2. 次级小字号 (比系统字号小 2px) - 涵盖时间、描述、小标签、代码块头部等 */
+.sb-label, .set-item-val, .toggle-desc, .mo-desc, .cp-item-time, 
+.disc, .file-capsule, .import-opt-btn .opt-desc, .set-desc, 
+.code-block-header, .set-label, .think-content p,
+.edit-banner, .edit-bar {
+    font-size: calc(var(--font-size-sys) - 2px) !important;
+}
+
+/* 3. 系统大标题 (比系统字号大 4px) - 涵盖弹窗标题、页面大标题等 */
+.cp-title, .del-dialog h3, .sheet-title, .sb-logo {
+    font-size: calc(var(--font-size-sys) + 4px) !important;
+}
+
+/* 4. 迷你字号 (比系统字号小 4px) - 专门用于 tokens 测速与辅助生成信息 */
+.msg-stats, .file-capsule-tokens, #sysTokenCount, #bioTokenCount {
+    font-size: calc(var(--font-size-sys) - 4px) !important;
+}
+
+/* 欢迎界面的超大字 */
+.w-text {
+    font-size: calc(var(--font-size-sys) + 12px) !important;
+}
+
+/* === HTML/Canvas 实时预览 UI === */
+.code-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.code-run-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #A0A0A0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  transition: color 0.2s;
+}
+.code-run-btn:hover { color: #4CAF50; }
+.html-preview-container {
+  display: none;
+  background: #FFFFFF;
+  border-top: 1px solid #1E1E1E;
+  padding: 0;
+  margin: 0;
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+  resize: vertical; /* 允许用户拖拽调整预览框高度 */
+  min-height: 300px;
+}
+.html-preview-container.show {
+  display: block;
+}
+.html-preview-iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  border: none;
+  background: #FFFFFF;
+  display: block;
+}
+
+/* === 角色设定卡片 UI === */
+.char-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 16px;
+  padding: 12px 20px 100px;
+  overflow-y: auto;
+  align-content: start;
+  flex: 1;
+}
+.char-grid::-webkit-scrollbar { width: 5px; }
+.char-grid::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+.char-card {
+  background: var(--bg-input); border: 2px solid transparent; border-radius: 16px; 
+  padding: 20px 16px; text-align: center; cursor: pointer; transition: all 0.2s; 
+  position: relative; box-shadow: var(--input-shadow);
+}
+.char-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+.char-card.active { border-color: var(--accent); background: var(--bg-user-bubble); }
+.char-card.active::before { content: '✓'; position: absolute; top: 10px; left: 12px; color: var(--accent); font-weight: bold; font-size: 16px; }
+.char-avatar {
+  width: 60px; height: 60px; border-radius: 50%; background: var(--bg-page); 
+  display: flex; align-items: center; justify-content: center; font-size: 32px; 
+  margin: 0 auto 12px; border: 1px solid var(--border);
+}
+.char-name { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.char-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 34px; }
+.char-edit-btn {
+  position: absolute; top: 10px; right: 10px; color: var(--text-muted); background: var(--bg-page); 
+  border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; 
+  opacity: 0; transition: all 0.2s; border: 1px solid var(--border);
+}
+.char-card:hover .char-edit-btn { opacity: 1; }
+.char-edit-btn:hover { color: var(--accent); border-color: var(--accent); }
+@media (hover: none) { .char-edit-btn { opacity: 1; background: transparent; border: none; } }
+
+/* === 高颜值自定义颜色选择器 UI === */
+.custom-color-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 14px;
+  border-radius: 7px;
+  outline: none;
+  margin: 6px 0 12px;
+}
+.custom-color-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.custom-color-slider::-webkit-slider-thumb:active {
+  transform: scale(1.15);
+}
+.hue-track { background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); }
 </style>
 </head>
 <body class="dark">
@@ -800,6 +1003,11 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
   <div class="sb-item" onclick="openChatsPage()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   <span data-i18n="chat_history">对话记录</span> </div>
+  <!-- 新增：角色设定入口 -->
+  <div class="sb-item" onclick="openCharsPage()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+    <span data-i18n="characters">角色设定</span>
+  </div>
   <div class="sb-divider"></div>
   <div class="sb-label" data-i18n="sb_recents">Recents</div>
   <div class="sb-chats" id="sbChats"></div>
@@ -930,6 +1138,69 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
   </button>
 </div>
 
+<!-- Characters Page (角色设定页) -->
+<div class="chats-page" id="charsPage">
+  <div class="cp-hdr">
+    <button class="cp-back" onclick="closeCharsPage()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="14" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="cp-title" data-i18n="characters_title">角色设定</div>
+  <div class="char-grid" id="charList"></div>
+  <button class="cp-fab" onclick="openCharEdit()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <span data-i18n="char_add">添加角色</span>
+  </button>
+</div>
+
+<!-- Character Edit Dialog (角色编辑弹窗) -->
+<div class="del-overlay" id="charEditOverlay" style="z-index: 1200;">
+  <div class="del-dialog" style="max-width: 340px; width: 90%;">
+    <h3 style="margin-bottom: 16px;" data-i18n="char_edit_title">编辑角色</h3>
+    <div style="display:flex; gap:12px; margin-bottom:12px; align-items: center;">
+        <!-- 头像区域：支持点击上传，默认显示名称首字母 -->
+        <div class="set-input-group" style="flex: 0 0 70px; margin:0; display:flex; flex-direction:column; align-items:center;">
+          <label style="font-size: 12px; margin-bottom: 4px;" data-i18n="char_avatar">头像</label>
+          
+          <!-- 预览圆圈，点击触发上传 -->
+          <div id="charAvatarPreviewBtn" style="width: 54px; height: 54px; border-radius: 50%; background: var(--bg-hover); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: var(--text-primary); cursor: pointer; position: relative; overflow: hidden;" title="点击上传图片" onclick="document.getElementById('charAvatarFile').click()">
+            <span id="charAvatarFallbackText">C</span>
+            <img id="charAvatarImgEl" src="" style="display:none; width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0;">
+          </div>
+          
+          <!-- 隐藏的文件选择器与 Base64 存储槽 -->
+          <input type="file" id="charAvatarFile" accept="image/png, image/jpeg, image/webp, image/gif" style="display:none;" onchange="handleCharAvatarUpload(event)">
+          <input type="hidden" id="charAvatarBase64">
+        </div>
+
+        <div class="set-input-group" style="flex: 1; margin:0;">
+          <label style="font-size: 12px;" data-i18n="char_name">角色名称</label>
+          <!-- 新增 oninput 事件同步首字母 -->
+          <input type="text" id="editCharName" oninput="syncCharFallbackName()" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg-input); color:var(--text-primary); outline:none;">
+        </div>
+    </div>
+    <div class="set-input-group" style="margin: 0 0 12px 0;">
+      <label style="font-size: 12px;" data-i18n="char_desc">一句话简介</label>
+      <input type="text" id="editCharDesc" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg-input); color:var(--text-primary); outline:none;">
+    </div>
+    <div class="set-input-group" style="margin: 0 0 20px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label style="font-size: 12px;" data-i18n="char_prompt">角色设定 (Prompt)</label>
+          <span id="charPromptTokenCount" style="font-size: 11px; color: var(--text-muted); font-family: monospace;">0 tk</span>
+      </div>
+      <textarea id="editCharPrompt" oninput="updateCharTokenCount()" rows="5" data-i18n-placeholder="char_prompt_ph" placeholder="填入角色的系统提示词，它将覆盖模型原本的提示词..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg-input); color:var(--text-primary); outline:none; resize:none; font-family:inherit;"></textarea>
+    </div>
+    
+    <div class="del-btns" style="justify-content: space-between;">
+      <button class="del-btn" id="btnDeleteChar" style="background:none; color:#D94F4F; padding:8px 0;" onclick="deleteChar()" data-i18n="btn_delete">删除</button>
+      <div style="display:flex; gap:10px;">
+          <button class="del-btn cancel" onclick="closeCharEdit()" data-i18n="btn_cancel">取消</button>
+          <button class="del-btn confirm" style="background:var(--accent);" onclick="saveChar()" data-i18n="btn_save">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Context Menu -->
 <div class="ctx-menu" id="ctxMenu">
   <div class="ctx-item" data-action="rename" onclick="ctxAction('rename')">
@@ -971,13 +1242,23 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
     </div>
     <div class="set-input-group" style="margin: 0 0 20px 0;">
       <!-- 新增：支持思考模式的开关 -->
-      <div class="toggle-row" style="padding: 0; margin-bottom: 20px;">
+      <div class="toggle-row" style="padding: 0; margin-bottom: 4px;">
         <div class="toggle-info">
           <div class="toggle-label" style="font-size: 13px;" data-i18n="edit_model_think">支持思考模式</div>
           <div class="toggle-desc" style="font-size: 11.5px;" data-i18n="edit_model_think_desc">原生支持 <think> 标签的模型</div>
         </div>
-        <button class="toggle-switch" id="editModelThinkToggle" onclick="this.classList.toggle('on')"></button>
+        <button class="toggle-switch" id="editModelThinkToggle" onclick="this.classList.toggle('on'); document.getElementById('legacyThinkRow').style.display = this.classList.contains('on') ? 'flex' : 'none';"></button>
       </div>
+      
+      <!-- 新增：仅当思考模式开启时显示的老版兼容开关 -->
+      <div class="toggle-row" id="legacyThinkRow" style="padding: 0; margin-bottom: 20px; display: none;">
+        <div class="toggle-info">
+          <div class="toggle-label" style="font-size: 13px;" data-i18n="edit_model_legacy_think">老版思考方式</div>
+          <div class="toggle-desc" style="font-size: 11.5px;" data-i18n="edit_model_legacy_think_desc">针对类似QwQ使用(/no_think)的思考</div>
+        </div>
+        <button class="toggle-switch" id="editModelLegacyThinkToggle" onclick="this.classList.toggle('on')"></button>
+      </div>
+
       <!-- 增加 Flex 布局，右侧显示 Token -->
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <label style="font-size: 12px;" data-i18n="edit_model_sys">系统提示词</label>
@@ -1046,13 +1327,13 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
     </div>
     
     <h2 style="font-family:'Source Serif 4', 'Noto Sans SC', serif; font-weight: 400; font-size: 24px; margin-bottom: 4px; color: var(--text-primary);">CloverPal</h2>
-    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Version 1.0.2</p>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Version 1.0.5</p>
     
     <div style="text-align: left; background: var(--bg-page); padding: 16px; border-radius: 12px; margin-bottom: 24px; font-size: 13px; line-height: 1.6; border: 1px solid var(--border);">
       <div style="margin-bottom: 14px;">
         <strong style="color: var(--text-primary); font-size: 14px; display: flex; align-items: center; gap: 6px;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <span data-i18n="about_author">作者 (Author)</span>
+          <span data-i18n="about_author">作者</span>
         </strong>
         <div style="color: var(--text-secondary); margin-top: 4px;" data-i18n="about_author_desc">CloverPal是由 Spike8086开发一款纯本地大模型APP。</div>
         <a href="https://github.com/Spike8086" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 6px 12px; background: var(--bg-hover); color: var(--text-primary); text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 13px; transition: background 0.2s;">
@@ -1072,6 +1353,52 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
     </div>
 
     <button class="del-btn cancel" style="width: 100%; font-size: 15px; padding: 12px; border-radius: 12px; background: var(--bg-hover); color: var(--text-primary);" onclick="closeAbout()" data-i18n="btn_close">关闭</button>
+  </div>
+</div>
+
+<!-- 自定义主题色弹窗 (完全替代系统取色器) -->
+<!-- 自定义主题色弹窗 (完全替代系统取色器) -->
+<div class="del-overlay" id="customColorOverlay" style="z-index: 3600;">
+  <div class="del-dialog" style="max-width: 320px; width: 90%; padding: 24px;">
+    <h3 style="margin-bottom: 20px; text-align: center; font-size: 16px;" data-i18n="cc_title">自定义主题色</h3>
+
+    <!-- 颜色预览与 HEX 输入 -->
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+        <div id="ccPreview" style="width: 54px; height: 54px; border-radius: 50%; border: 3px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.08); transition: background 0.1s;"></div>
+        <div style="flex: 1;">
+            <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px; display: block;">HEX COLOR</label>
+            <input type="text" id="ccHexInput" oninput="syncColorFromHex()" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-input); color: var(--text-primary); font-family: monospace; font-size: 15px; outline: none; transition: border-color 0.2s;" maxlength="7">
+        </div>
+    </div>
+
+    <!-- HSL 滑块控制区 -->
+    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px;">
+        <div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 2px;">
+                <span data-i18n="cc_hue">色相 (Hue)</span><span id="ccHueVal" style="font-family: monospace;">0°</span>
+            </div>
+            <input type="range" id="ccHue" min="0" max="360" value="0" class="custom-color-slider hue-track" oninput="syncColorFromSliders()">
+        </div>
+        <div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 2px;">
+                <span data-i18n="cc_sat">饱和度 (Saturation)</span><span id="ccSatVal" style="font-family: monospace;">100%</span>
+            </div>
+            <input type="range" id="ccSat" min="0" max="100" value="100" class="custom-color-slider" oninput="syncColorFromSliders()">
+        </div>
+        <div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 2px;">
+                <span data-i18n="cc_lit">亮度 (Lightness)</span><span id="ccLitVal" style="font-family: monospace;">50%</span>
+            </div>
+            <input type="range" id="ccLit" min="0" max="100" value="50" class="custom-color-slider" oninput="syncColorFromSliders()">
+        </div>
+    </div>
+
+    <!-- 底部按钮 -->
+    <div class="del-btns" style="justify-content: space-between; gap: 12px;">
+      <!-- 注意这里加上了 data-i18n="btn_cancel" -->
+      <button class="del-btn cancel" onclick="closeCustomColorPicker()" style="flex: 1; padding: 10px; font-size: 15px;" data-i18n="btn_cancel">取消</button>
+      <button class="del-btn confirm" onclick="applyCustomColor()" style="background:var(--accent); flex: 1; padding: 10px; font-size: 15px;" data-i18n="cc_apply">应用颜色</button>
+    </div>
   </div>
 </div>
   </div>
@@ -1184,24 +1511,71 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
     <button class="toggle-switch on" id="darkToggle" onclick="toggleDarkSetting()"></button>
   </div>
 
-  <div class="set-item" style="padding: 14px 24px; cursor: default;">
-    <div class="set-item-left">
+  <div class="set-item" style="padding: 14px 24px; cursor: default; flex-direction: column; align-items: flex-start; gap: 14px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
       <div class="toggle-info">
         <div class="toggle-label" data-i18n="set_theme_color">主题颜色</div>
         <div class="toggle-desc" data-i18n="set_theme_color_desc">自定义全局按钮与图标颜色</div>
       </div>
-    </div>
-    <div style="display: flex; align-items: center; gap: 12px;">
       <button data-i18n="set_reset_default" onclick="resetAccentColor()" style="background:none; border:none; color:var(--text-secondary); font-size:12px; cursor:pointer; text-decoration:underline;">恢复默认</button>
-      
-      <input type="color" id="cfgAccentColor" class="color-picker-input" oninput="updateAccentColor(this.value)" onchange="saveAccentColor()">
     </div>
+    
+    <!-- 精简为 5 个预设色块 + 1 个自定义入口 -->
+    <div id="themeColorPalette" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; padding-top: 4px;"></div>
   </div>
 </div>
 <div class="sheet-divider"></div>
 
+<!-- === 🌟 新增：字体大小控制 (折叠版) === -->
 <div class="set-section">
-  <div class="set-label" data-i18n="set_advanced">高级 (ADVANCED)</div>
+  <!-- 点击头部切换折叠状态 -->
+  <div class="set-label" onclick="toggleFonts()" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding-right:24px;">
+      <span data-i18n="set_typography">字体大小</span>
+      
+      <div style="display: flex; align-items: center; gap: 12px;">
+          <!-- 阻止事件冒泡(event.stopPropagation)，防止点击“恢复默认”时触发面板折叠 -->
+          <button onclick="event.stopPropagation(); resetFonts()" style="background:none; border:none; color:var(--text-secondary); font-size:12px; cursor:pointer; text-decoration:underline;" data-i18n="set_reset_default">恢复默认</button>
+          
+          <!-- 折叠指示箭头 -->
+          <svg id="fontsIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s; color: var(--text-muted);"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+  </div>
+  
+  <!-- 将三个滑块包裹在隐藏容器内 -->
+  <div id="fontsContent" style="display: none;">
+      <!-- 1. 系统字体 -->
+      <div style="padding: 6px 24px 12px;">
+          <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:8px;">
+              <span data-i18n="set_font_sys">系统界面字体</span>
+              <span id="valFontSys" style="color:var(--text-muted); font-family:monospace; font-size:12px;">15px</span>
+          </div>
+          <input type="range" id="sliderFontSys" min="12" max="22" value="15" step="1" style="width:100%; accent-color: var(--accent);" oninput="updateFont('sys', this.value)" onchange="saveFont('sys', this.value)">
+      </div>
+
+      <!-- 2. 用户字体 -->
+      <div style="padding: 6px 24px 12px;">
+          <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:8px;">
+              <span data-i18n="set_font_user">用户消息字体</span>
+              <span id="valFontUser" style="color:var(--text-muted); font-family:monospace; font-size:12px;">15px</span>
+          </div>
+          <input type="range" id="sliderFontUser" min="12" max="24" value="15" step="1" style="width:100%; accent-color: var(--accent);" oninput="updateFont('user', this.value)" onchange="saveFont('user', this.value)">
+      </div>
+
+      <!-- 3. AI 字体 -->
+      <div style="padding: 6px 24px 16px;">
+          <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:8px;">
+              <span data-i18n="set_font_ai">AI 消息字体</span>
+              <span id="valFontAi" style="color:var(--text-muted); font-family:monospace; font-size:12px;">16px</span>
+          </div>
+          <input type="range" id="sliderFontAi" min="12" max="26" value="16" step="1" style="width:100%; accent-color: var(--accent);" oninput="updateFont('ai', this.value)" onchange="saveFont('ai', this.value)">
+      </div>
+  </div>
+</div>
+<!-- === 结束：字体大小控制 === -->
+
+<div class="sheet-divider"></div>
+<div class="set-section">
+  <div class="set-label" data-i18n="set_advanced">高级</div>
   <div class="toggle-row" style="padding:14px 24px">
     <div class="toggle-info">
       <div class="toggle-label" data-i18n="set_show_speed">显示生成速度</div>
@@ -1209,12 +1583,19 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
     </div>
     <button class="toggle-switch" id="speedToggle" onclick="toggleSpeedSetting()"></button>
   </div>
+  <div class="toggle-row" style="padding:4px 24px 14px">
+    <div class="toggle-info">
+      <div class="toggle-label" data-i18n="set_inject_time">注入时间感知</div>
+      <div class="toggle-desc" data-i18n="set_inject_time_desc">让 AI 知道当前的时间与日期</div>
+    </div>
+    <button class="toggle-switch" id="timeToggle" onclick="toggleTimeSetting()"></button>
+  </div>
 </div>
 <div class="sheet-divider"></div>
 
 <!-- === 模型选择 (集成在这里！) === -->
 <div class="set-section">
-  <div class="set-label" data-i18n="set_select_model">模型选择 (SELECT MODEL)</div>
+  <div class="set-label" data-i18n="set_select_model">模型选择</div>
   
   <!-- 这里是模型列表容器 -->
   <div id="settingsModelList" class="model-list-box">
@@ -1234,25 +1615,25 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
 <!-- === 模型参数配置 === -->
 <div class="set-section">
   <div class="set-label" onclick="toggleParams()" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding-right:24px;">
-    <span data-i18n="set_parameters">参数配置 (PARAMETERS)</span>
+    <span data-i18n="set_parameters">参数配置</span>
     <svg id="paramsIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s; color: var(--text-muted);"><polyline points="6 9 12 15 18 9"/></svg>
   </div>
 
   <div id="paramsContent" style="display: none;">
     <div class="set-input-group">
-      <label data-i18n="set_ctx_length">上下文长度 (Context Length)</label>
+      <label data-i18n="set_ctx_length">上下文长度</label>
       <input type="number" id="cfgContextSize" data-i18n-placeholder="ph_default_2048" placeholder="默认 2048" value="2048" onblur="saveModelConfig()">
       <div class="set-desc" data-i18n="set_ctx_desc">决定 AI 能记多少对话（最大32769）。</div>
     </div>
     
     <div class="set-input-group">
-      <label data-i18n="set_max_tokens">最大生成长度 (Max Tokens)</label>
+      <label data-i18n="set_max_tokens">最大生成长度</label>
       <input type="number" id="cfgMaxTokens" data-i18n-placeholder="ph_default_512" placeholder="默认 512" value="512" onblur="saveModelConfig()">
       <div class="set-desc" data-i18n="set_max_desc">单次回答的生成长度（不能超过上下文）。</div>
     </div>
     
     <div class="set-input-group">
-      <label data-i18n="set_threads">线程数 (Threads)</label>
+      <label data-i18n="set_threads">线程数</label>
       <input type="number" id="cfgThreads" data-i18n-placeholder="ph_default_4" placeholder="默认 4" value="4" onblur="saveModelConfig()">
       <div class="set-desc" data-i18n="set_threads_desc">模型推理时的核心使用数量。</div>
     </div>
@@ -1414,10 +1795,10 @@ const i18n = {
         set_theme_color: "主题颜色",
         set_theme_color_desc: "自定义全局按钮与图标颜色",
         set_reset_default: "恢复默认",
-        set_advanced: "高级 (ADVANCED)",
+        set_advanced: "高级",
         set_show_speed: "显示生成速度",
         set_show_speed_desc: "显示 Prompt 解码与文本生成速度 (t/s)",
-        set_select_model: "模型选择 (SELECT MODEL)",
+        set_select_model: "模型选择",
         set_import_model: "导入新的 GGUF 模型",
         set_parameters: "参数配置 (PARAMETERS)",
         set_ctx_length: "上下文长度 (Context Length)",
@@ -1541,6 +1922,39 @@ const i18n = {
         
         edit_model_think: "支持软思考模式",
         edit_model_think_desc: "原生支持切换思考的模型",
+        // ====== 字体大小 ======
+        set_typography: "字体大小",
+        set_font_sys: "系统界面字体",
+        set_font_user: "用户消息字体",
+        set_font_ai: "AI 消息字体",
+        characters: "角色设定",
+        characters_title: "角色设定",
+        char_avatar: "头像 (Emoji)",
+        char_name: "角色名称",
+        char_desc: "一句话简介",
+        char_prompt: "角色设定 (Prompt)",
+        char_prompt_ph: "填入角色的系统提示词，它将覆盖模型原本的提示词...",
+        char_add: "添加角色",
+        char_edit_title: "编辑角色",
+        btn_delete: "删除",
+        char_default_name: "默认助手",
+        char_default_desc: "纯净状态，无额外角色设定",
+        char_del_confirm: "确定要彻底删除这个角色吗？",
+        char_require_model_title: "未加载模型",
+        char_require_model_msg: "请先在顶部选择并加载一个 AI 模型，然后再开始与角色对话。",
+        set_inject_time: "注入时间感知",
+        set_inject_time_desc: "让 AI 知道当前的时间与日期",
+        err_no_model_title: "未加载模型",
+        err_no_model_msg: "请先在顶部选择或导入一个 AI 模型后再开始对话。",
+        
+        edit_model_legacy_think: "老版思考方式",
+        edit_model_legacy_think_desc: "针对类似 Qwen3 等使用 (/no_think) 的思考模型",
+        cc_title: "自定义主题色",
+        cc_hue: "色相 (Hue)",
+        cc_sat: "饱和度 (Saturation)",
+        cc_lit: "亮度 (Lightness)",
+        cc_apply: "应用颜色",
+        cc_tooltip: "自定义任意颜色"
     },
     en: {
         set_account: "Account",
@@ -1691,10 +2105,44 @@ const i18n = {
         more_models: "More Models",
         edit_model_think: "Supports Thinking",
         edit_model_think_desc: "Model natively supports switch think or not",
+        
+        // ====== 字体大小 ======
+        set_typography: "Typography",
+        set_font_sys: "System Font Size",
+        set_font_user: "User Message Font",
+        set_font_ai: "AI Message Font",
+        characters: "Characters",
+        characters_title: "Characters",
+        char_avatar: "Avatar",
+        char_name: "Name",
+        char_desc: "Short Bio",
+        char_prompt: "System Prompt",
+        char_prompt_ph: "Enter system prompt here. It will override the model's default prompt...",
+        char_add: "New Character",
+        char_edit_title: "Edit Character",
+        btn_delete: "Delete",
+        char_default_name: "Default Assistant",
+        char_default_desc: "Pure assistant, no extra personas.",
+        char_del_confirm: "Are you sure you want to delete this character?",
+        char_require_model_title: "No Model Loaded",
+        char_require_model_msg: "Please select and load an AI model from the top menu before chatting with a character.",
+        set_inject_time: "Inject Time Context",
+        set_inject_time_desc: "Let AI know the current date and time",
+        err_no_model_title: "No Model Loaded",
+        err_no_model_msg: "Please select or import an AI model at the top before chatting.",
+        
+        edit_model_legacy_think: "Legacy Thinking Mode",
+        edit_model_legacy_think_desc: "For models like Qwen3 that use (/no_think)",
+        cc_title: "Custom Theme Color",
+        cc_hue: "Hue",
+        cc_sat: "Saturation",
+        cc_lit: "Lightness",
+        cc_apply: "Apply Color",
+        cc_tooltip: "Pick a custom color"
     }
 };
 
-// ════════ 配置 Marked.js 代码块增强渲染 (彻底修复版) ════════
+// ════════ 配置 Marked.js 代码块增强渲染 (彻底修复 + 支持 HTML 预览版) ════════
 const customRenderer = {
   code(tokenOrCode, infostring) {
     let rawCode = "";
@@ -1715,7 +2163,7 @@ const customRenderer = {
     // 终极防御：确保获取到的绝对是字符串
     const safeCode = typeof rawCode === 'string' ? rawCode : String(rawCode);
     
-    // 3. 字符转义防止 HTML 注入，保护渲染引擎不崩溃
+    // 3. 字符转义防止 HTML 注入
     const escapedCode = safeCode
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -1723,17 +2171,39 @@ const customRenderer = {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
         
+    // 检查是否是 HTML/前端代码
+    const isHtml = lang.toLowerCase() === 'html' || lang.toLowerCase() === 'xml';
+    
+    // 如果是 HTML，渲染运行按钮
+    const runBtnHtml = isHtml ? `
+        <button class="code-run-btn" onclick="runHtmlPreview(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <span>Run Preview</span>
+        </button>
+    ` : '';
+
+    // 如果是 HTML，渲染隐藏的 iframe 容器
+    const previewHtml = isHtml ? `
+        <div class="html-preview-container">
+            <iframe class="html-preview-iframe" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+        </div>
+    ` : '';
+        
     // 渲染精致的自带 Header 栏代码块
     return `
     <div class="code-block-wrapper">
         <div class="code-block-header">
             <span class="code-lang">${lang}</span>
-            <button class="code-copy-btn" onclick="copyCodeBlock(this)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                <span>Copy</span>
-            </button>
+            <div class="code-actions">
+                ${runBtnHtml}
+                <button class="code-copy-btn" onclick="copyCodeBlock(this)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span>Copy</span>
+                </button>
+            </div>
         </div>
-        <pre><code class="language-${lang}">${escapedCode}</code></pre>
+        <pre style="${isHtml ? 'border-radius: 0;' : ''}"><code class="language-${lang}">${escapedCode}</code></pre>
+        ${previewHtml}
     </div>`;
   }
 };
@@ -1765,14 +2235,113 @@ function copyCodeBlock(btn) {
     }
 }
 
+// ════════ HTML / Canvas 实时运行预览功能 ════════
+window.runHtmlPreview = function(btn) {
+    const wrapper = btn.closest('.code-block-wrapper');
+    const codeEl = wrapper.querySelector('pre code');
+    const previewContainer = wrapper.querySelector('.html-preview-container');
+    const iframe = wrapper.querySelector('.html-preview-iframe');
+    
+    // 获取未转义的真实代码
+    const rawCode = codeEl.textContent;
+    const isShowing = previewContainer.classList.contains('show');
+
+    if (isShowing) {
+        // 关闭预览
+        previewContainer.classList.remove('show');
+        btn.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <span>Run Preview</span>
+        `;
+        btn.style.color = "";
+        iframe.srcdoc = ""; // 清空内存
+    } else {
+        // 展开预览
+        previewContainer.classList.add('show');
+        btn.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+            <span>Close Preview</span>
+        `;
+        btn.style.color = "#4CAF50";
+
+        // 构建安全的注入 HTML（消除白边，自适应缩放）
+        const injectHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>
+                    body { margin: 0; padding: 10px; font-family: system-ui, sans-serif; }
+                    /* 如果 AI 生成了纯 canvas，确保它能居中并适应大小 */
+                    canvas { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+                </style>
+            </head>
+            <body>
+                ${rawCode}
+            </body>
+            </html>
+        `;
+        
+        // 使用 srcdoc 隔离执行，完美支持含有 <script> 和 <canvas> 的代码
+        iframe.srcdoc = injectHtml;
+    }
+    
+    // 稍微滚动一下让用户能看到预览区域
+    setTimeout(() => {
+        const scrollEl = document.getElementById('scroll');
+        if(scrollEl) {
+            scrollEl.scrollTop = wrapper.offsetTop - 50;
+        }
+    }, 100);
+};
+
 // 获取本地保存的语言，默认中文
 let currentLang = localStorage.getItem('app_lang') || 'en';
 
-// 翻译助手函数
-function t(key) {
-    return i18n[currentLang][key] || key;
+// 随机选择欢迎语的变体 (0或1)
+const welcomeVariant = Math.random() < 0.5 ? 0 : 1;
+
+// 动态问候语引擎：6个时间段 x 3种变体 x 中英双语
+function getDynamicWelcomeMsg() {
+    const hour = new Date().getHours();
+    let p = 0;
+    if (hour >= 0 && hour < 6) p = 0;       // 00:00-05:59 凌晨
+    else if (hour >= 6 && hour < 9) p = 1;  // 06:00-08:59 早晨
+    else if (hour >= 9 && hour < 12) p = 2; // 09:00-11:59 上午
+    else if (hour >= 12 && hour < 17) p = 3;// 12:00-16:59 下午
+    else if (hour >= 17 && hour < 20) p = 4;// 17:00-19:59 傍晚
+    else p = 5;                             // 20:00-23:59 夜晚
+
+    // 动态获取当前的用户名，如果没设置则默认为 User
+    const name = typeof currentUsername !== 'undefined' && currentUsername ? currentUsername : 'User';
+
+    const msgs = {
+        zh: [
+            ["夜深了，还需要帮忙吗？", "这么晚还不睡？我在这里陪你。", `${name}，这么晚还在忙吗？注意休息哦。`],
+            ["早上好！今天想聊点什么？", "新的一天开始了，有什么计划？", `早上好，${name}！愿你拥有活力满满的一天。`],
+            ["上午好，工作还顺利吗？", "需要我帮你找些什么资料吗？", `上午好，${name}，遇到什么棘手的问题了吗？`],
+            ["下午好，喝杯咖啡休息一下吧。", "下午好！有什么我可以效劳的？", `下午好，${name}，需要我帮你整理些思路吗？`],
+            ["傍晚好，今天过得怎么样？", "日落了，来放松聊聊吧。", `傍晚好，${name}。辛苦一天了，聊点轻松的吧。`],
+            ["晚上好，还在忙吗？", "夜色已深，随时准备为你解答。", `晚上好，${name}，今天有哪些有趣的收获？`]
+        ],
+        en: [
+            ["It's late, need any help?", "Up late? I'm here for you.", `Working late, ${name}? Make sure to get some rest.`],
+            ["Good morning! What's on your mind?", "A new day begins, any plans?", `Good morning, ${name}! Wishing you an energetic day.`],
+            ["Good morning, how's your day going?", "Need me to look up anything for you?", `Good morning, ${name}. Run into any tricky problems today?`],
+            ["Good afternoon, grab a coffee and take a break.", "Good afternoon! How can I assist you?", `Good afternoon, ${name}. Need help organizing your thoughts?`],
+            ["Good evening, how was your day?", "The sun is setting, let's chat and relax.", `Good evening, ${name}. It's been a long day, let's chat about something relaxing.`],
+            ["Good evening, still busy?", "The night is deep, I'm ready to answer your questions.", `Good evening, ${name}. What interesting things did you learn today?`]
+        ]
+    };
+    return msgs[currentLang][p][welcomeVariant];
 }
 
+// 翻译助手函数
+function t(key) {
+    if (key === 'welcome_msg') return getDynamicWelcomeMsg();
+    return i18n[currentLang][key] || key;
+}
 // 切换语言逻辑
 function toggleLanguage() {
     currentLang = currentLang === 'zh' ? 'en' : 'zh';
@@ -1939,14 +2508,53 @@ function saveAccentColor() {
     localStorage.setItem('cfg_accent_color', currentAccentColor);
 }
 
-// 5. 新增：恢复默认颜色
-function resetAccentColor() {
-    updateAccentColor(DEFAULT_ACCENT_COLOR);
-    saveAccentColor();
-    // 同步更新 UI 上的调色盘颜色显示
-    const picker = document.getElementById('cfgAccentColor');
-    if(picker) picker.value = DEFAULT_ACCENT_COLOR;
+// ════════ 字体大小控制器 (Typography Logic) ════════
+const DEFAULT_FONTS = { sys: 15, user: 15, ai: 16 };
+
+// 1. 初始化读取本地保存的字体大小
+(function initFonts() {
+    const sys = localStorage.getItem('cfg_font_sys') || DEFAULT_FONTS.sys;
+    const user = localStorage.getItem('cfg_font_user') || DEFAULT_FONTS.user;
+    const ai = localStorage.getItem('cfg_font_ai') || DEFAULT_FONTS.ai;
+
+    applyFont('sys', sys);
+    applyFont('user', user);
+    applyFont('ai', ai);
+})();
+
+// 2. 核心应用函数：修改 CSS 变量，并更新 UI 数字
+function applyFont(type, val) {
+    // 改变根元素的 CSS 变量
+    document.documentElement.style.setProperty(`--font-size-${type}`, `${val}px`);
+    
+    // 更新设置面板里的数字和滑块位置
+    const valLabel = document.getElementById(`valFont${capitalize(type)}`);
+    const slider = document.getElementById(`sliderFont${capitalize(type)}`);
+    if (valLabel) valLabel.innerText = `${val}px`;
+    if (slider) slider.value = val;
 }
+
+// 3. 用户拖动滑块时：实时预览
+function updateFont(type, val) {
+    applyFont(type, val);
+}
+
+// 4. 用户松手后：保存到本地
+function saveFont(type, val) {
+    localStorage.setItem(`cfg_font_${type}`, val);
+}
+
+// 5. 恢复默认字体大小
+function resetFonts() {
+    updateFont('sys', DEFAULT_FONTS.sys); saveFont('sys', DEFAULT_FONTS.sys);
+    updateFont('user', DEFAULT_FONTS.user); saveFont('user', DEFAULT_FONTS.user);
+    updateFont('ai', DEFAULT_FONTS.ai); saveFont('ai', DEFAULT_FONTS.ai);
+}
+
+// 辅助函数：首字母大写
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+// ════════ 字体大小控制器 结束 ════════
+
 // ══ Chat data store ══
 let chatStore = JSON.parse(localStorage.getItem('Clover_chats')) || [];
 if (!Array.isArray(chatStore)) chatStore = []; // 终极防空保护，确保它绝对是个数组
@@ -2003,29 +2611,52 @@ let ctxTargetId=null,deleteTargetId=null,longPressTimer=null;
 
 // ── Helpers ──
 
-// ════════ 智能拦截并渲染 <think> 标签 (空内容隐藏版) ════════
+// ════════ 智能拦截并渲染 <think> 标签与 LaTeX 公式 ════════
 function renderAIHtml(rawText) {
+    let mathBlocks = [];
+    let tempText = rawText;
+
+    // 0. 预处理：保护所有的代码块不被干扰，避免代码块里的公式语法被提取
+    let codeBlocks = [];
+    tempText = tempText.replace(/```[\s\S]*?```|`[^`]*`/g, (match) => {
+        codeBlocks.push(match);
+        return `%%%CODE_BLOCK_${codeBlocks.length - 1}%%%`;
+    });
+
+    // 0.1 提取块级公式 $$...$$ 或 \[...\]
+    tempText = tempText.replace(/\$\$([\s\S]*?)\$\$|\\\[([\s\S]*?)\\\]/g, (match, p1, p2) => {
+        mathBlocks.push({ type: 'block', content: p1 !== undefined ? p1 : p2 });
+        return `%%%MATH_BLOCK_${mathBlocks.length - 1}%%%`;
+    });
+
+    // 0.2 提取行内公式 $...$ 或 \(...\)
+    // 匹配 $ 开头和结尾且内容首尾无多余空格，避免误匹配 $10 和 $20 的货币符号
+    tempText = tempText.replace(/\$([^\s$][^$]*?[^\s$]|[^\s$])\$|\\\(([\s\S]*?)\\\)/g, (match, p1, p2) => {
+        mathBlocks.push({ type: 'inline', content: p1 !== undefined ? p1 : p2 });
+        return `%%%MATH_BLOCK_${mathBlocks.length - 1}%%%`;
+    });
+
+    // 0.3 还原代码块，交由 marked 解析
+    codeBlocks.forEach((block, index) => {
+        tempText = tempText.replace(`%%%CODE_BLOCK_${index}%%%`, () => block);
+    });
+
     const thinkBlocks = [];
     
-    // 1. 查找所有的 <think> 块（支持流式未闭合状态）
-    let tempText = rawText.replace(/<think>([\s\S]*?)(<\/think>|$)/gi, (match, content, closeTag) => {
+   // 1. 查找所有的 <think> 块（支持流式未闭合状态）
+    tempText = tempText.replace(/<think>([\s\S]*?)(<\/think>|$)/gi, (match, content, closeTag) => {
         const innerText = content.trim();
         const isClosed = closeTag.toLowerCase() === '</think>';
         
-        //  核心拦截：如果标签已经闭合，且里面没有任何实质内容，则直接丢弃，不渲染任何 UI
-        if (isClosed && innerText === '') {
-            return ''; 
-        }
+        // 核心拦截：如果标签已经闭合，且里面没有任何实质内容，则直接丢弃
+        if (isClosed && innerText === '') return ''; 
 
-        // 使用 marked 解析 <think> 内部的内容 (如果流式输出刚开始为空，显示...)
+        // 内部嵌套内容同样经过 marked 渲染
         const innerHtml = marked.parse(innerText || (isClosed ? '' : '...'));
-        
-        // 如果没闭合（正在流式输出），强制打开折叠面板并显示动画
         const isOpen = isClosed ? "" : "open";
         const statusText = isClosed ? t('thinking_process') : t('thinking');
         const pulse = isClosed ? "" : '<div class="think-pulse"></div>';
 
-        // 组装精致的折叠面板 HTML
         const html = `
         <details class="think-box" ${isOpen}>
             <summary class="think-summary">
@@ -2036,10 +2667,10 @@ function renderAIHtml(rawText) {
             <div class="think-content">${innerHtml}</div>
         </details>`;
         
-        const index = thinkBlocks.length;
         thinkBlocks.push(html);
-        // 放置一个占位符，防止外层的 marked 破坏我们拼好的 HTML
-        return `%%%THINK_BLOCK_${index}%%%`;
+        // 【核心修复】：前后强制加两个换行符 \n\n，迫使 marked.js 将其识别为独立的块级元素！
+        // 从而避免 <p> 标签错误包裹 <details> 标签导致浏览器 DOM 树崩溃渲染成普通文本。
+        return `\n\n%%%THINK_BLOCK_${thinkBlocks.length - 1}%%%\n\n`;
     });
 
     // 2. 用 marked 解析剩余的正常 Markdown 文本
@@ -2047,10 +2678,33 @@ function renderAIHtml(rawText) {
 
     // 3. 把占位符替换回我们组装好的折叠面板
     thinkBlocks.forEach((blockHtml, index) => {
-        // marked 可能会用 <p> 包裹我们的占位符，所以两种情况都要替换
-        // 这里使用 split/join 替换，避免字符串内容带有 $ 符号导致正则解析异常
         finalHtml = finalHtml.split(`<p>%%%THINK_BLOCK_${index}%%%</p>`).join(blockHtml);
         finalHtml = finalHtml.split(`%%%THINK_BLOCK_${index}%%%`).join(blockHtml);
+    });
+
+    // 4. 利用 KaTeX 渲染数学公式并还原
+    mathBlocks.forEach((block, index) => {
+        let renderedMath = '';
+        if (typeof katex !== 'undefined') {
+            try {
+                renderedMath = katex.renderToString(block.content, {
+                    displayMode: block.type === 'block',
+                    throwOnError: false
+                });
+            } catch(e) {
+                // 如果公式解析错误，红色高亮提示
+                renderedMath = `<span style="color:#D94F4F;">[Math Error: ${e.message}]</span>`;
+            }
+        } else {
+            // 如果离线环境下 KaTeX 加载失败，兜底渲染为文本
+            renderedMath = block.type === 'block' ? `<div style="font-family:monospace;">$$${block.content}$$</div>` : `<span style="font-family:monospace;">$${block.content}$</span>`;
+        }
+
+        // 处理块级公式被 marked 自动外包 <p> 标签的问题
+        if (block.type === 'block') {
+            finalHtml = finalHtml.split(`<p>%%%MATH_BLOCK_${index}%%%</p>`).join(`<div class="katex-display-wrapper">${renderedMath}</div>`);
+        }
+        finalHtml = finalHtml.split(`%%%MATH_BLOCK_${index}%%%`).join(renderedMath);
     });
 
     return finalHtml;
@@ -2070,7 +2724,173 @@ function saveModelConfig() {
     
 }
 
+
 // ── Settings Logic ──
+// === 新增：时间注入开关控制 ===
+let injectTimeContext = localStorage.getItem('cfg_inject_time') !== 'false'; // 默认开启
+
+function toggleTimeSetting() {
+    injectTimeContext = !injectTimeContext;
+    localStorage.setItem('cfg_inject_time', injectTimeContext);
+    document.getElementById('timeToggle').classList.toggle('on', injectTimeContext);
+}
+
+// === 专属高颜值调色盘与颜色引擎 ===
+// 精简为 5 个最高频的经典配色
+const PRESET_COLORS = ['#2D722C', '#4A90D9', '#D97756', '#7B6FAF', '#5C5750'];
+let tempCustomColor = '';
+
+function renderColorPalette() {
+    const container = document.getElementById('themeColorPalette');
+    if(!container) return;
+    
+    let html = '';
+    let isCustomActive = true;
+
+    // 1. 渲染 5 个预设颜色
+    PRESET_COLORS.forEach(c => {
+        const isActive = (c.toUpperCase() === currentAccentColor.toUpperCase());
+        if (isActive) isCustomActive = false;
+        
+        html += `
+            <div onclick="setPresetColor('${c}')" 
+                 style="width: 32px; height: 32px; border-radius: 50%; background: ${c}; cursor: pointer; 
+                 box-shadow: ${isActive ? `0 0 0 2px var(--bg-input), 0 0 0 4px ${c}` : '0 2px 6px rgba(0,0,0,0.1)'}; 
+                 transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); transform: ${isActive ? 'scale(1.15)' : 'scale(1)'};">
+            </div>`;
+    });
+
+    // 2. 如果用户选择了预设外的颜色，渲染一个独立色块代表当前选择
+    if (isCustomActive && currentAccentColor) {
+        html += `
+            <div onclick="setPresetColor('${currentAccentColor}')" 
+                 style="width: 32px; height: 32px; border-radius: 50%; background: ${currentAccentColor}; cursor: pointer; 
+                 box-shadow: 0 0 0 2px var(--bg-input), 0 0 0 4px ${currentAccentColor}; 
+                 transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); transform: scale(1.15);">
+            </div>`;
+    }
+
+    // 3. 渲染高颜值“彩虹按钮”，点击呼出我们的自定义弹窗
+    html += `
+        <div onclick="openCustomColorPicker()" 
+             title="${t('cc_tooltip')}" 
+             style="width: 32px; height: 32px; border-radius: 50%; cursor: pointer; 
+             background: conic-gradient(from 90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+             box-shadow: 0 2px 6px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center;
+             transition: transform 0.2s ease;">
+             <div style="width: 22px; height: 22px; border-radius: 50%; background: var(--bg-input); display: flex; align-items: center; justify-content: center;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+             </div>
+        </div>`;
+
+    container.innerHTML = html;
+}
+
+function setPresetColor(c) {
+    updateAccentColor(c);
+    saveAccentColor();
+    renderColorPalette(); 
+}
+
+function resetAccentColor() {
+    updateAccentColor(DEFAULT_ACCENT_COLOR); 
+    saveAccentColor();
+    renderColorPalette();
+}
+
+// === 自定义 HSL 色彩转换引擎 ===
+function hslToHex(h, s, l) {
+    l /= 100;
+    const a = s * Math.min(l, 1 - l) / 100;
+    const f = n => {
+        const k = (n + h / 30) % 12;
+        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        return Math.round(255 * color).toString(16).padStart(2, '0');
+    };
+    return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
+}
+
+function hexToHsl(hex) {
+    hex = hex.replace(/^#/, '');
+    if(hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+    let r = parseInt(hex.substring(0,2), 16)/255, g = parseInt(hex.substring(2,4), 16)/255, b = parseInt(hex.substring(4,6), 16)/255;
+    let max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    if (max !== min) {
+        let d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    return [Math.round(h*360), Math.round(s*100), Math.round(l*100)];
+}
+
+// === 自定义取色器弹窗交互 ===
+function openCustomColorPicker() {
+    const hsl = hexToHsl(currentAccentColor);
+    document.getElementById('ccHue').value = hsl[0];
+    document.getElementById('ccSat').value = hsl[1];
+    document.getElementById('ccLit').value = hsl[2];
+    
+    syncColorFromSliders();
+    document.getElementById('customColorOverlay').classList.add('show');
+}
+
+function closeCustomColorPicker() {
+    document.getElementById('customColorOverlay').classList.remove('show');
+}
+
+function syncColorFromSliders() {
+    const h = document.getElementById('ccHue').value;
+    const s = document.getElementById('ccSat').value;
+    const l = document.getElementById('ccLit').value;
+    
+    // 更新数值文本
+    document.getElementById('ccHueVal').innerText = `${h}°`;
+    document.getElementById('ccSatVal').innerText = `${s}%`;
+    document.getElementById('ccLitVal').innerText = `${l}%`;
+
+    const hex = hslToHex(h, s, l);
+    tempCustomColor = hex;
+    
+    // 更新 UI 预览和输入框
+    document.getElementById('ccPreview').style.backgroundColor = hex;
+    if (document.activeElement !== document.getElementById('ccHexInput')) {
+        document.getElementById('ccHexInput').value = hex;
+    }
+    
+    // 动态渲染滑块轨道背景，实现高级色彩感知
+    document.getElementById('ccSat').style.background = `linear-gradient(to right, hsl(${h}, 0%, ${l}%), hsl(${h}, 100%, ${l}%))`;
+    document.getElementById('ccLit').style.background = `linear-gradient(to right, #000000, hsl(${h}, ${s}%, 50%), #ffffff)`;
+}
+
+function syncColorFromHex() {
+    const input = document.getElementById('ccHexInput');
+    let hex = input.value.trim();
+    if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+        const hsl = hexToHsl(hex);
+        document.getElementById('ccHue').value = hsl[0];
+        document.getElementById('ccSat').value = hsl[1];
+        document.getElementById('ccLit').value = hsl[2];
+        syncColorFromSliders(); // 反向同步回滑块
+    }
+}
+
+function applyCustomColor() {
+    if (/^#[0-9A-Fa-f]{6}$/.test(tempCustomColor)) {
+        updateAccentColor(tempCustomColor);
+        saveAccentColor();
+        renderColorPalette();
+        closeCustomColorPicker();
+    } else {
+        document.getElementById('ccHexInput').style.borderColor = "#D94F4F";
+    }
+}
+
 
 function saveGenSettings() {
   const ctxVal = document.getElementById('ctxSizeInput').value;
@@ -2101,6 +2921,7 @@ function openSettings(){
   document.getElementById('settingsSheet').classList.add('show');
   
 }
+
 // ── Persistence Logic ──
 function saveChat() {
   if (!currentChatId) return;
@@ -2278,6 +3099,19 @@ function closeSettings(){
 function toggleParams() {
     const content = document.getElementById('paramsContent');
     const icon = document.getElementById('paramsIcon');
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.style.transform = 'rotate(180deg)'; // 箭头翻转
+    } else {
+        content.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';   // 箭头恢复
+    }
+}
+
+// 切换字体大小面板的展开和折叠状态
+function toggleFonts() {
+    const content = document.getElementById('fontsContent');
+    const icon = document.getElementById('fontsIcon');
     if (content.style.display === 'none') {
         content.style.display = 'block';
         icon.style.transform = 'rotate(180deg)'; // 箭头翻转
@@ -2800,6 +3634,10 @@ function stopGeneration() {
 
 // ── Send Logic (Updated) ──
 async function send() {
+  if (!activeModelId) {
+      uiAlert(t('err_no_model_msg'), t('err_no_model_title'));
+      return;
+  }
   const inp = document.getElementById('inp');
   const text = inp.value.trim();
   
@@ -2857,30 +3695,56 @@ async function triggerRealSend(text, isRegen = false) {
   d.innerHTML = `<div class="body"><div class="text"><p>${t('thinking')}</p></div></div>`;
   document.getElementById('msgs').appendChild(d);
   scrollEnd();
-
+  
   // ════════ 核心融合：专属 Prompt 格式化 ════════
   let sysP = "";
-  if (activeModelId) {
+  
+  // 1. 【修复核心】优先读取当前激活角色的系统提示词，彻底移除对 'default' 角色的拦截
+  if (typeof activeCharId !== 'undefined') {
+      const activeChar = characterStore.find(c => c.id === activeCharId);
+      if (activeChar && activeChar.prompt && activeChar.prompt.trim() !== '') {
+          sysP = activeChar.prompt;
+      }
+  }
+
+  // 2. 如果角色没有写提示词，则退而求其次读取模型自带的提示词
+  if (!sysP.trim() && activeModelId) {
       const activeMod = localModels.find(m => m.id === activeModelId);
       if (activeMod && activeMod.systemPrompt) {
           sysP = activeMod.systemPrompt;
       }
   }
   
-  //  核心融合：获取当前精准时间与星期
+  // 3. 核心融合：获取当前精准时间与星期
   const now = new Date();
   const timeStr = now.toLocaleString('en-US', { 
       year: 'numeric', month: 'long', day: 'numeric', 
       weekday: 'long', hour: '2-digit', minute: '2-digit' 
   });
 
-  //  使用方括号将【环境时间】与【身份信息】包装为元数据
-  let userContext = `[System Context: Current date and time is ${timeStr}. User Profile: Name is ${currentUsername}.`;
-  if (currentUserBio) userContext += ` Bio: ${currentUserBio}`;
-  userContext += `]`;
+  // 3. 核心融合：动态组装 System Context（受时间开关控制）
+  let contextParts = [];
   
+  if (injectTimeContext) {
+      const now = new Date();
+      const timeStr = now.toLocaleString('en-US', { 
+          year: 'numeric', month: 'long', day: 'numeric', 
+          weekday: 'long', hour: '2-digit', minute: '2-digit' 
+      });
+      contextParts.push(`Current date and time is ${timeStr}.`);
+  }
+  
+  contextParts.push(`User Profile: Name is ${currentUsername}.`);
+  if (currentUserBio) {
+      contextParts.push(`Bio: ${currentUserBio}`);
+  }
+
+  // 4. 使用方括号将元数据包装
+  let userContext = `[System Context: ${contextParts.join(' ')}]`;
+  
+  // 【修复核心】将角色的系统提示词提升到最高优先级，环境背景放置在尾部
   if (sysP.trim() !== "") {
-      sysP = userContext + "\nSystem Instruction: " + sysP;
+      sysP = `${sysP}\n\n${userContext}`;
   } else {
       sysP = userContext;
   }
@@ -2948,18 +3812,22 @@ async function triggerRealSend(text, isRegen = false) {
   const astStart = isQwen ? "<|im_start|>assistant\n" : (isGemma ? "<start_of_turn>model\n" : "");
   const astEnd   = isQwen ? "<|im_end|>\n" : (isGemma ? "<end_of_turn>\n" : "\n");
 
-  // 3. 盖楼：将历史记录按架构专属格式拼装
+ 
+
+ // 3. 盖楼：将历史记录按架构专属格式拼装
   const lastUserIndex = recentHistory.map(m => m.role).lastIndexOf('user');
   const activeModForSend = localModels.find(m => m.id === activeModelId);
   const supportsThink = activeModForSend ? !!activeModForSend.supportsThinking : false;
+  // 获取老版兼容开关状态
+  const legacyThink = activeModForSend ? !!activeModForSend.legacyThink : false;
   
   for (let i = 0; i < recentHistory.length; i++) {
     let msg = recentHistory[i];
     if (msg.role === 'user') {
       let content = msg.content;
       
-      //  核心连接 Extended Thinking：
-      if (i === lastUserIndex && supportsThink && !extendedThinking) {
+      // 【轨制 A：老版强控】只有用户开启了兼容开关，才注入 /no_think 标签
+      if (i === lastUserIndex && supportsThink && !extendedThinking && legacyThink) {
           content += " /no_think"; 
       }
 
@@ -2972,12 +3840,11 @@ async function triggerRealSend(text, isRegen = false) {
           injectedSys = true;
       }
       fullPrompt += `${usrStart}${content}${usrEnd}`;
+      
     } else if (msg.role === 'assistant') {
-      //  核心修复 2：绝对不能把历史的 <think> 过程喂给模型！
-      // 这会导致模型严重混乱、超出上下文，并且直接输出空内容 (也就是你看到的文本消失)
+      // 绝对不能把历史的 <think> 过程喂给模型
       let cleanContent = msg.content.replace(/<think>[\s\S]*?(<\/think>|$)/gi, '').trim();
       
-      // 如果去掉 think 后没有任何内容，给个默认占位符防止格式崩溃
       if (!cleanContent) cleanContent = t('sys_understood');
       
       fullPrompt += `${astStart}${cleanContent}${astEnd}`;
@@ -2995,20 +3862,38 @@ async function triggerRealSend(text, isRegen = false) {
 
   // 4. 点火：交接话筒，引导 AI 生成
   fullPrompt += `${astStart}`;
-  // ════════ 組装结束 ════════
 
   let tokenListener = null;
   let currentResponse = ""; 
+
+  // 【轨制 B：现代强控】助手预填充
+  if (supportsThink && !extendedThinking) {
+      if (!legacyThink) {
+          // 只有在没开老版兼容时，才使用预填充强杀思考（新一代模型绝杀技）
+          fullPrompt += "</think>\n";
+      }
+  }
 
   try {
     tokenListener = await Capacitor.Plugins.Llama.addListener('onToken', (data) => {
         if (!typing) return;
         const p = d.querySelector('.text');
-        //修复 4：在前端 JS 累加字符 (JS 处理字符串拼接极快)
+        
         currentResponse += data.text; 
 
-        p.innerHTML = renderAIHtml(currentResponse);
-        d.dataset.text = currentResponse;
+        // ════════ 核心修复：拆除 DOM 炸弹 ════════
+        // 因为我们偷偷预填充了 </think>，它会被传回前端。
+        // 这个没有开头的孤儿关闭标签会瞬间摧毁 HTML 树，导致思考内容变成普通文本。
+        // 解决办法：在交给 Markdown 渲染前，如果发现文本开头有它，直接切掉！
+        let renderText = currentResponse;
+        if (renderText.startsWith("</think>\n")) {
+            renderText = renderText.substring(9);
+        } else if (renderText.startsWith("</think>")) {
+            renderText = renderText.substring(8);
+        }
+
+        p.innerHTML = renderAIHtml(renderText);
+        d.dataset.text = renderText; // 存入干净的文本，保证编辑与复制正常
         scrollEnd();
     });
 
@@ -3112,8 +3997,6 @@ function handleDrop(e) {
     }
 }
 
-// ════════ 替换原有的 renderModelList 函数 ════════
-// ════════ 替换原有的 renderModelList 函数 ════════
 function renderModelList() {
     // 1. 设置页面 (Settings) 的渲染保持原样 (带拖拽和删除)
     const settingsContainer = document.getElementById('settingsModelList');
@@ -3282,13 +4165,18 @@ function renderModelList() {
                 if(m) quickList.appendChild(createModelItem(m));
             });
 
-            // 填充滑动子页 (全部)
-            localModels.forEach(m => {
-                allList.appendChild(createModelItem(m));
+            // 获取已经显示在主视图的模型 ID
+            const displayModelIds = displayModels.map(m => m && m.id);
+            // 过滤出剩余的其他模型
+            const moreModels = localModels.filter(m => !displayModelIds.includes(m.id));
+
+            // 填充滑动子页 (仅限主视图未显示的剩余模型)
+            moreModels.forEach(m => {
+                if(m) allList.appendChild(createModelItem(m));
             });
 
-            // 当模型 > 4 个时，在思考模式下方动态追加“更多模型”按钮
-            if (localModels.length > 4) {
+            // 当还有剩余模型未显示时，在思考模式下方动态追加“更多模型”按钮
+            if (moreModels.length > 0) {
                 moreBtnBox.innerHTML = `
                     <div class="sheet-divider" style="margin-top:0;"></div>
                     <div class="ms-more-btn" onclick="slideModelSheet(true)">
@@ -3487,7 +4375,10 @@ function openSettings() {
         document.getElementById('cfgThreads').value = localStorage.getItem('cfg_threads') || '4';
     if(document.getElementById('cfgAccentColor')) 
         document.getElementById('cfgAccentColor').value = currentAccentColor;
-        
+    // --- 新增：回显时间和速度开关、渲染色板 ---
+    document.getElementById('speedToggle').classList.toggle('on', localStorage.getItem('cfg_show_speed') === 'true');
+    document.getElementById('timeToggle').classList.toggle('on', injectTimeContext);
+    renderColorPalette();
     renderModelList();
     document.getElementById('setSheetOv').classList.add('show');
     document.getElementById('settingsSheet').classList.add('show');
@@ -3639,6 +4530,17 @@ function openModelEdit(e, id) {
     }
     updateSysTokenCount(); // 新增：打开时刷新计数
     document.getElementById('modelEditOverlay').classList.add('show');
+    
+    // 回显：支持思考模式的开关
+    const legacyToggle = document.getElementById('editModelLegacyThinkToggle');
+    const legacyRow = document.getElementById('legacyThinkRow');
+    
+    if (thinkToggle && legacyToggle && legacyRow) {
+        const isThinkOn = !!mod.supportsThinking;
+        thinkToggle.classList.toggle('on', isThinkOn);
+        legacyRow.style.display = isThinkOn ? 'flex' : 'none';
+        legacyToggle.classList.toggle('on', !!mod.legacyThink);
+    }
 }
 
 function saveModelEdit() {
@@ -3649,9 +4551,11 @@ function saveModelEdit() {
         mod.desc = document.getElementById('editModelDesc').value.trim();
         mod.systemPrompt = document.getElementById('editModelSysPrompt').value;
         
-        // 保存：支持思考模式的开关
+        // 保存：支持思考模式与老版兼容的开关
         const thinkToggle = document.getElementById('editModelThinkToggle');
+        const legacyToggle = document.getElementById('editModelLegacyThinkToggle');
         mod.supportsThinking = thinkToggle ? thinkToggle.classList.contains('on') : false;
+        mod.legacyThink = legacyToggle ? legacyToggle.classList.contains('on') : false;
         
         localStorage.setItem('local_models', JSON.stringify(localModels));
         renderModelList(); 
@@ -3690,6 +4594,300 @@ function updateSysTokenCount() {
     const el = document.getElementById('editModelSysPrompt');
     const cnt = document.getElementById('sysTokenCount');
     if(el && cnt) cnt.innerText = estimateTokens(el.value) + ' tk';
+}
+
+// ════════ 角色卡片系统 (Characters System) ════════
+let characterStore = JSON.parse(localStorage.getItem('Clover_chars')) || [];
+
+// 【核心大改 1：历史数据清洗】彻底剔除以前生成的 "default" 角色
+const originalLength = characterStore.length;
+characterStore = characterStore.filter(c => c.id !== 'default');
+if (originalLength !== characterStore.length) {
+    localStorage.setItem('Clover_chars', JSON.stringify(characterStore));
+}
+
+// 【核心大改 2：默认状态为空】没有选择角色时，状态设为空字符串，不再使用 'default'
+let activeCharId = localStorage.getItem('active_char_id') || '';
+if (activeCharId === 'default') {
+    activeCharId = '';
+    localStorage.setItem('active_char_id', '');
+}
+
+let editingCharId = null;
+
+function openCharsPage() {
+    document.getElementById('sb').classList.remove('open');
+    document.getElementById('ov').classList.remove('show');
+    renderCharsList();
+    document.getElementById('charsPage').classList.add('open');
+}
+
+function closeCharsPage() {
+    document.getElementById('charsPage').classList.remove('open');
+}
+
+function renderCharsList() {
+    const list = document.getElementById('charList');
+    list.innerHTML = '';
+    
+    characterStore.forEach(c => {
+        const isSel = c.id === activeCharId;
+        const el = document.createElement('div');
+        el.className = 'char-card' + (isSel ? ' active' : '');
+        el.onclick = () => selectChar(c.id);
+        
+        // 动态判断是图片还是文字首字母
+        let avatarHtml = '';
+        if (c.avatar && c.avatar.startsWith('data:image/')) {
+            avatarHtml = `<img src="${c.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+        } else {
+            const firstLetter = c.name ? c.name.charAt(0).toUpperCase() : 'C';
+            avatarHtml = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--bg-hover); color:var(--text-primary); font-size:24px; font-weight:bold; border-radius:50%;">${firstLetter}</div>`;
+        }
+        
+        el.innerHTML = `
+            <div class="char-avatar">${avatarHtml}</div>
+            <div class="char-name">${esc(c.name)}</div>
+            <div class="char-desc">${esc(c.desc || '')}</div>
+            <button class="char-edit-btn" onclick="openCharEdit(event, '${c.id}')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+        `;
+        list.appendChild(el);
+    });
+}
+
+async function selectChar(id) {
+    if (!activeModelId) {
+        await uiAlert(t('char_require_model_msg'), t('char_require_model_title'));
+        return; 
+    }
+    activeCharId = id;
+    localStorage.setItem('active_char_id', id);
+    renderCharsList(); 
+    closeCharsPage();
+    resetChat();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (activeCharId) {
+        resetChat(); 
+    }
+});
+
+function openCharEdit(e, id) {
+    if (e) e.stopPropagation();
+    editingCharId = id || null;
+    
+    const isNew = !id;
+    const c = isNew ? { name: '', avatar: '', desc: '', prompt: '' } : characterStore.find(x => x.id === id);
+    
+    const base64Input = document.getElementById('charAvatarBase64');
+    const imgEl = document.getElementById('charAvatarImgEl');
+    const textEl = document.getElementById('charAvatarFallbackText');
+
+    // 回显头像 (图片或首字母)
+    if (c.avatar && c.avatar.startsWith('data:image/')) {
+        base64Input.value = c.avatar;
+        imgEl.src = c.avatar;
+        imgEl.style.display = 'block';
+        textEl.style.display = 'none';
+    } else {
+        base64Input.value = '';
+        textEl.textContent = c.name ? c.name.charAt(0).toUpperCase() : 'C';
+        imgEl.style.display = 'none';
+        textEl.style.display = 'block';
+    }
+
+    document.getElementById('editCharName').value = c.name || '';
+    document.getElementById('editCharDesc').value = c.desc || '';
+    document.getElementById('editCharPrompt').value = c.prompt || '';
+    
+    const delBtn = document.getElementById('btnDeleteChar');
+    // 【修改】只判断是否是新建，不再判断 default
+    if (isNew) {
+        delBtn.style.visibility = 'hidden';
+    } else {
+        delBtn.style.visibility = 'visible';
+    }
+    
+    updateCharTokenCount();
+    document.getElementById('charEditOverlay').classList.add('show');
+}
+
+function closeCharEdit() {
+    document.getElementById('charEditOverlay').classList.remove('show');
+}
+
+function saveChar() {
+    const base64 = document.getElementById('charAvatarBase64').value;
+    const avatar = base64 ? base64 : ''; 
+
+    const name = document.getElementById('editCharName').value.trim() || '未命名角色';
+    const desc = document.getElementById('editCharDesc').value.trim();
+    const prompt = document.getElementById('editCharPrompt').value;
+    
+    if (editingCharId) {
+        const c = characterStore.find(x => x.id === editingCharId);
+        if (c) { c.avatar = avatar; c.name = name; c.desc = desc; c.prompt = prompt; }
+    } else {
+        const newId = 'char_' + Date.now();
+        characterStore.push({ id: newId, avatar, name, desc, prompt });
+        selectChar(newId); 
+    }
+    
+    localStorage.setItem('Clover_chars', JSON.stringify(characterStore));
+    renderCharsList();
+    closeCharEdit();
+}
+
+// 【核心大改 3：退出角色扮演】
+window.exitRoleplay = function(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    activeCharId = ''; // 清空选中状态
+    localStorage.setItem('active_char_id', '');
+    
+    if (typeof renderCharsList === 'function') {
+        renderCharsList(); // 刷新列表取消高亮
+    }
+    
+    resetChat(); // 触发 UI 重置
+};
+
+// 【核心大改 4：覆写 UI 重置逻辑】严格区分空状态和角色状态
+const originalResetChat = resetChat;
+window.resetChat = function() {
+    originalResetChat(); 
+    
+    const welcomeContainer = document.getElementById('welcome');
+    if (!welcomeContainer) return;
+
+    // 默认的三叶草 SVG
+    const defaultSpark = `
+      <svg class="spark-svg" viewBox="0 0 68 68">
+        <g transform="translate(34,34)" fill="var(--accent)">
+          <path d="M 0 0 C -8 -8, -18 -12, -18 -22 C -18 -30, -8 -30, 0 -22 C 8 -30, 18 -30, 18 -22 C 18 -12, 8 -8, 0 0 Z" transform="translate(0, -2)"/>
+          <path d="M 0 0 C -8 -8, -18 -12, -18 -22 C -18 -30, -8 -30, 0 -22 C 8 -30, 18 -30, 18 -22 C 18 -12, 8 -8, 0 0 Z" transform="rotate(120) translate(0, -2)"/>
+          <path d="M 0 0 C -8 -8, -18 -12, -18 -22 C -18 -30, -8 -30, 0 -22 C 8 -30, 18 -30, 18 -22 C 18 -12, 8 -8, 0 0 Z" transform="rotate(240) translate(0, -2)"/>
+        </g>
+      </svg>`;
+
+    // 如果当前有选中的角色，渲染专属 UI
+    if (activeCharId) {
+        const char = characterStore.find(c => c.id === activeCharId);
+        if (char) {
+            let charAvatarHtml = '';
+            const avatarStyle = "width: 56px; height: 56px; border-radius: 50%; object-fit: cover; margin-bottom: 18px; border: 2px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: bold; background: var(--bg-input); color: var(--text-primary);";
+            
+            if (char.avatar && char.avatar.startsWith('data:image/')) {
+                charAvatarHtml = `<img src="${char.avatar}" style="${avatarStyle}">`;
+            } else {
+                const firstLetter = char.name ? char.name.charAt(0).toUpperCase() : 'C';
+                charAvatarHtml = `<div style="${avatarStyle}">${firstLetter}</div>`;
+            }
+
+            const welcomeText = currentLang === 'zh' 
+                ? `准备与 <span style="font-weight: 600; color: var(--accent);">${esc(char.name)}</span> 对话...` 
+                : `Chatting with <span style="font-weight: 600; color: var(--accent);">${esc(char.name)}</span>...`;
+
+            const exitBtnHtml = `
+                <button onclick="exitRoleplay(event)" style="margin-top: 24px; padding: 8px 18px; border-radius: 20px; background: transparent; color: var(--text-muted); border: 1px solid var(--border); font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;" onmouseover="this.style.color='var(--text-primary)'; this.style.background='var(--bg-hover)'" onmouseout="this.style.color='var(--text-muted)'; this.style.background='transparent'">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    ${currentLang === 'zh' ? '退出角色扮演' : 'Exit Roleplay'}
+                </button>
+            `;
+
+            welcomeContainer.innerHTML = `
+                ${charAvatarHtml}
+                <div class="w-text">${welcomeText}</div>
+                ${exitBtnHtml}
+            `;
+            return; // 结束渲染
+        }
+    }
+    
+    // 如果没有任何选中角色，彻底回归默认的三叶草纯净状态
+    welcomeContainer.innerHTML = `
+        ${defaultSpark}
+        <div class="w-text" data-i18n="welcome_msg">${getDynamicWelcomeMsg()}</div>
+    `;
+};
+
+async function deleteChar() {
+    if (!editingCharId) return;
+    const confirm = await uiConfirm(t('char_del_confirm'), t('char_edit_title'));
+    if (!confirm) return;
+    
+    characterStore = characterStore.filter(c => c.id !== editingCharId);
+    
+    if (activeCharId === editingCharId) {
+        activeCharId = ''; // 删除选中角色时，重置为空
+        localStorage.setItem('active_char_id', '');
+        resetChat();
+    }
+    
+    localStorage.setItem('Clover_chars', JSON.stringify(characterStore));
+    renderCharsList();
+    closeCharEdit();
+}
+
+function updateCharTokenCount() {
+    const el = document.getElementById('editCharPrompt');
+    const cnt = document.getElementById('charPromptTokenCount');
+    if (el && cnt) cnt.innerText = estimateTokens(el.value) + ' tk';
+}
+
+// ====== 图片压缩与上传引擎 ======
+function compressImage(file, maxSize = 150) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width; let height = img.height;
+                if (width > height) {
+                    if (width > maxSize) { height *= maxSize / width; width = maxSize; }
+                } else {
+                    if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+                }
+                canvas.width = width; canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', 0.8)); 
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+async function handleCharAvatarUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const base64Str = await compressImage(file);
+    
+    document.getElementById('charAvatarBase64').value = base64Str;
+    const imgEl = document.getElementById('charAvatarImgEl');
+    imgEl.src = base64Str;
+    imgEl.style.display = 'block';
+    document.getElementById('charAvatarFallbackText').style.display = 'none';
+    
+    e.target.value = ''; 
+}
+
+function syncCharFallbackName() {
+    const base64 = document.getElementById('charAvatarBase64').value;
+    if (!base64) {
+        const nameVal = document.getElementById('editCharName').value.trim();
+        const textEl = document.getElementById('charAvatarFallbackText');
+        textEl.textContent = nameVal ? nameVal.charAt(0).toUpperCase() : 'C';
+    }
 }
 </script>
 </body>
