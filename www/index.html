@@ -977,6 +977,89 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
   transform: scale(1.15);
 }
 .hue-track { background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); }
+
+/* ================= 角色扮演：气泡与头像模式专属样式 (完美分离版) ================= */
+/* 初始化头像容器（默认隐藏） */
+.msg-user .av, .msg-ai .av { 
+    display: none; width: 34px; height: 34px; border-radius: 50%; 
+    flex-shrink: 0; align-items: center; justify-content: center; 
+    font-weight: 600; overflow: hidden; font-size: 15px; 
+}
+.msg-user .av { background: #7B6FAF; color: #fff; margin-left: 12px; }
+.msg-ai .av { background: var(--bg-hover); color: var(--text-primary); margin-right: 12px; }
+
+/* 仅当处于角色扮演，且开启了开关时生效 */
+body.roleplay-bubble-mode .msg-user { 
+    flex-direction: row; 
+    align-items: flex-start;
+}
+body.roleplay-bubble-mode .msg-user .av { display: flex !important; }
+
+body.roleplay-bubble-mode .msg-ai { 
+    display: flex !important; 
+    flex-direction: row;
+    align-items: flex-start;
+}
+body.roleplay-bubble-mode .msg-ai .av { display: flex !important; }
+
+/* 核心修改：限制右侧消息区域的最大宽度 */
+body.roleplay-bubble-mode .msg-ai .body {
+    max-width: calc(100% - 46px); 
+}
+
+/* 核心修改：把气泡的外衣（背景色、边框、圆角）只穿在 .text 身上！ */
+body.roleplay-bubble-mode .msg-ai .text {
+    background: var(--bg-input); 
+    padding: 12px 16px;
+    border-radius: 18px 18px 18px 4px; 
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    display: inline-block; /* 紧贴内容宽度，而不是撑满整行 */
+    width: fit-content;
+}
+
+/* 专门针对气泡模式下的测速数据进行“瘦身” */
+body.roleplay-bubble-mode .msg-ai .msg-stats {
+    font-size: calc(var(--font-size-sys) - 6px) !important; 
+    letter-spacing: -0.3px; 
+    line-height: 1.3;      
+    margin-top: 10px;
+    border-top: 1px solid var(--border); /* 给测速数据上面加一条很浅的分割线 */
+    padding-top: 8px;
+}
+
+/* 剥离在气泡外部的按钮样式微调 */
+body.roleplay-bubble-mode .msg-ai .actions {
+    margin-top: 6px;         /* 距离气泡一点空隙 */
+    margin-bottom: 0;
+    margin-left: 4px;        /* 稍微往右挪一点，视觉上对齐气泡边缘 */
+    border-top: none;        /* 移除之前自带的虚线 */
+    padding-top: 0;
+}
+
+/* === 群聊 (Group Chat) 专属样式 === */
+.next-btn {
+  width: 36px; height: 36px; border: none;
+  background: var(--bg-hover); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  border-radius: 10px; color: var(--accent); transition: all 0.18s; display: none; margin-right: 4px;
+}
+.next-btn:hover { background: rgba(0,0,0,0.08); transform: scale(1.06); }
+.dark .next-btn:hover { background: rgba(255,255,255,0.1); }
+/* 只有处于群聊模式时，Next按钮才出现 */
+body.group-mode .next-btn { display: flex; }
+
+.msg-group-name {
+  font-size: 12px; color: var(--text-muted); margin-bottom: 4px; margin-left: 2px; font-weight: 600;
+}
+
+/* 选人卡片样式 */
+.group-char-card {
+  background: var(--bg-input); border: 2px solid var(--border); border-radius: 12px;
+  padding: 12px; text-align: center; cursor: pointer; transition: all 0.2s;
+}
+.group-char-card.selected {
+  border-color: var(--accent); background: var(--bg-user-bubble);
+}
 </style>
 </head>
 <body class="dark">
@@ -1003,6 +1086,12 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
   <div class="sb-item" onclick="openChatsPage()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   <span data-i18n="chat_history">对话记录</span> </div>
+ <!-- 新增：模拟群聊入口 -->
+  <div class="sb-item" onclick="openGroupSetup()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-3-3.87"/><path d="M9 21v-2a4 4 0 0 1 3-3.87"/><path d="M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/><path d="M3 21v-2a4 4 0 0 1 3-3.87"/><circle cx="5" cy="9" r="3"/><circle cx="19" cy="9" r="3"/></svg>
+    <span data-i18n="group_chat">模拟群聊</span>
+  </div>
+
   <!-- 新增：角色设定入口 -->
   <div class="sb-item" onclick="openCharsPage()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -1103,6 +1192,9 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
           </button>
         </div>
         <div class="input-r">
+           <button class="next-btn" id="nextBtn" onclick="triggerGroupNext()" data-i18n-title="tooltip_group_next" title="让下一个AI角色发言">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+          </button>
           <button class="in-btn" title="语音">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="1" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
           </button>
@@ -1217,6 +1309,24 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
   </div>
 </div>
 
+<!-- 群聊选人专属弹窗 -->
+<div class="del-overlay" id="groupSetupOverlay" style="z-index: 3600;">
+  <div class="del-dialog" style="max-width: 360px; width: 90%;">
+    <h3 style="margin-bottom: 8px; text-align: center;" data-i18n="group_setup_title">创建群聊</h3>
+    <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 16px;" data-i18n="group_setup_desc">请选择 2 到 3 个角色进行对话</p>
+    
+    <!-- 角色列表容器 -->
+    <div id="groupCharSelectList" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-height: 300px; overflow-y: auto; padding: 4px;">
+        <!-- JS 动态生成 -->
+    </div>
+
+    <div class="del-btns" style="margin-top: 20px; justify-content: space-between;">
+      <button class="del-btn cancel" style="flex: 1;" onclick="closeGroupSetup()" data-i18n="btn_cancel">取消</button>
+      <button class="del-btn confirm" id="btnConfirmGroup" style="flex: 1; background: var(--text-muted); pointer-events: none;" onclick="confirmGroupSetup()" data-i18n="group_start">开始群聊</button>
+    </div>
+  </div>
+</div>
+
 <!-- Delete Confirmation -->
 <div class="del-overlay" id="delOverlay">
   <div class="del-dialog">
@@ -1327,7 +1437,7 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
     </div>
     
     <h2 style="font-family:'Source Serif 4', 'Noto Sans SC', serif; font-weight: 400; font-size: 24px; margin-bottom: 4px; color: var(--text-primary);">CloverPal</h2>
-    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Version 1.0.5</p>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Version 1.0.6</p>
     
     <div style="text-align: left; background: var(--bg-page); padding: 16px; border-radius: 12px; margin-bottom: 24px; font-size: 13px; line-height: 1.6; border: 1px solid var(--border);">
       <div style="margin-bottom: 14px;">
@@ -1510,7 +1620,7 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
     </div>
     <button class="toggle-switch on" id="darkToggle" onclick="toggleDarkSetting()"></button>
   </div>
-
+  
   <div class="set-item" style="padding: 14px 24px; cursor: default; flex-direction: column; align-items: flex-start; gap: 14px;">
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
       <div class="toggle-info">
@@ -1522,6 +1632,14 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
     
     <!-- 精简为 5 个预设色块 + 1 个自定义入口 -->
     <div id="themeColorPalette" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; padding-top: 4px;"></div>
+  </div>
+  
+  <div class="toggle-row" style="padding:4px 24px 14px">
+    <div class="toggle-info">
+      <div class="toggle-label" data-i18n="set_show_avatars">在对话中显示头像</div>
+      <div class="toggle-desc" data-i18n="set_show_avatars_desc">类似微信的聊天气泡模式</div>
+    </div>
+    <button class="toggle-switch" id="avatarToggle" onclick="toggleAvatarSetting()"></button>
   </div>
 </div>
 <div class="sheet-divider"></div>
@@ -1589,6 +1707,14 @@ body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI
       <div class="toggle-desc" data-i18n="set_inject_time_desc">让 AI 知道当前的时间与日期</div>
     </div>
     <button class="toggle-switch" id="timeToggle" onclick="toggleTimeSetting()"></button>
+  </div>
+  <!-- 新增：注入个人档案开关 -->
+  <div class="toggle-row" style="padding:4px 24px 14px">
+    <div class="toggle-info">
+      <div class="toggle-label" data-i18n="set_inject_bio">注入个人档案</div>
+      <div class="toggle-desc" data-i18n="set_inject_bio_desc">让 AI 知道你的称呼与关于我设定</div>
+    </div>
+    <button class="toggle-switch" id="bioContextToggle" onclick="toggleBioSetting()"></button>
   </div>
 </div>
 <div class="sheet-divider"></div>
@@ -1954,7 +2080,27 @@ const i18n = {
         cc_sat: "饱和度 (Saturation)",
         cc_lit: "亮度 (Lightness)",
         cc_apply: "应用颜色",
-        cc_tooltip: "自定义任意颜色"
+        cc_tooltip: "自定义任意颜色",
+        set_show_avatars: "在对话中显示头像",
+        set_show_avatars_desc: "类似微信的聊天气泡模式",
+        
+        group_chat: "模拟群聊",
+        group_setup_title: "创建群聊",
+        group_setup_desc: "请选择 2 到 3 个角色进行对话",
+        group_start: "开始群聊",
+        group_require_chars: "请先在「角色设定」中至少创建 2 个不同的角色！",
+        group_max_limit: "群聊最多支持 3 个 AI 角色同时对话哦！",
+        group_require_model: "请先加载模型！",
+        group_chat_error: "[群聊发生错误]：",
+        group_regen_err_no_char: "无法重生成：找不到角色",
+        group_welcome_title: "群聊模式已开启",
+        group_welcome_desc1: "直接发送消息，或者点击右下角 <strong>▶</strong> 按钮",
+        group_welcome_desc2: "让 AI 们接力互相对话。",
+        group_exit: "退出群聊",
+        tooltip_group_next: "让下一个AI角色发言",
+        
+        set_inject_bio: "注入个人档案",
+        set_inject_bio_desc: "让 AI 知道你的称呼与关于我设定",
     },
     en: {
         set_account: "Account",
@@ -2138,7 +2284,27 @@ const i18n = {
         cc_sat: "Saturation",
         cc_lit: "Lightness",
         cc_apply: "Apply Color",
-        cc_tooltip: "Pick a custom color"
+        cc_tooltip: "Pick a custom color",
+        set_show_avatars: "Show Avatars in Chat",
+        set_show_avatars_desc: "Display user and AI avatars next to messages",
+        
+        group_chat: "Group Chat",
+        group_setup_title: "Create Group Chat",
+        group_setup_desc: "Select 2 to 3 characters to chat",
+        group_start: "Start Chat",
+        group_require_chars: "Please create at least 2 characters in 'Characters' first!",
+        group_max_limit: "Group chat supports a maximum of 3 AI characters at the same time!",
+        group_require_model: "Please load a model first!",
+        group_chat_error: "[Group Chat Error]: ",
+        group_regen_err_no_char: "Cannot regenerate: Character not found",
+        group_welcome_title: "Group Chat Enabled",
+        group_welcome_desc1: "Send a message, or click the <strong>▶</strong> button",
+        group_welcome_desc2: "to let the AIs talk to each other.",
+        group_exit: "Exit Group Chat",
+        tooltip_group_next: "Let next AI speak",
+        
+        set_inject_bio: "Inject User Profile",
+        set_inject_bio_desc: "Let AI know your name and bio",
     }
 };
 
@@ -2726,6 +2892,7 @@ function saveModelConfig() {
 
 
 // ── Settings Logic ──
+
 // === 新增：时间注入开关控制 ===
 let injectTimeContext = localStorage.getItem('cfg_inject_time') !== 'false'; // 默认开启
 
@@ -2733,6 +2900,15 @@ function toggleTimeSetting() {
     injectTimeContext = !injectTimeContext;
     localStorage.setItem('cfg_inject_time', injectTimeContext);
     document.getElementById('timeToggle').classList.toggle('on', injectTimeContext);
+}
+
+// === 新增：个人档案注入开关控制 ===
+let injectBioContext = localStorage.getItem('cfg_inject_bio') !== 'false'; // 默认开启
+
+function toggleBioSetting() {
+    injectBioContext = !injectBioContext;
+    localStorage.setItem('cfg_inject_bio', injectBioContext);
+    document.getElementById('bioContextToggle').classList.toggle('on', injectBioContext);
 }
 
 // === 专属高颜值调色盘与颜色引擎 ===
@@ -2909,6 +3085,7 @@ function openSettings(){
   document.getElementById('ov').classList.remove('show');
   document.getElementById('setUsername').textContent=currentUsername;
   document.getElementById('darkToggle').classList.toggle('on',document.body.classList.contains('dark'));
+  document.getElementById('avatarToggle').classList.toggle('on', showAvatars);
   
   // 新增：回显配置到输入框
   document.getElementById('ctxSizeInput').value = configContextSize;
@@ -3365,7 +3542,6 @@ let editMode=false, editMsgIdx=-1, editMsgEl=null, msgSheetTargetIdx=-1;
 let msgSheetText='';
 
 // ════════ 渲染用户消息 ════════
-// ════════ 渲染用户消息 ════════
 function addUser(text, idx) {
   const d = document.createElement('div');
   d.className = 'msg msg-user';
@@ -3373,33 +3549,63 @@ function addUser(text, idx) {
   d.dataset.msgIdx = msgIndex;
   
   let displayHtml = '';
-  // 核心魔法：放宽正则限制，兼容多种前缀以及中间不确定的空格，保护 UI 不被几万字乱码撑爆
   const fileRegex = /^\[(?:Attached file|已附加文件|Already attach file):\s*(.*?)\]\s*\n<file_content>[\s\S]*?<\/file_content>(?:\s*\n\n([\s\S]*))?$/i;
   const match = text.match(fileRegex);
   
   if (match) {
       const fileName = match[1].trim();
       const realText = match[2] || '';
-      
-      // 渲染精致的胶囊 UI
       const capsuleHtml = `
       <div class="file-capsule" style="margin-bottom: ${realText ? '8px' : '0'}; background: var(--bg-page); border: 1px solid var(--border); padding: 5px 12px; border-radius: 16px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-primary); max-width: 100%;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
           <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500;">${esc(fileName)}</span>
       </div>`;
-      
-      // 如果发文件时还带了文字，拼在胶囊下面
       displayHtml = capsuleHtml + (realText ? `<div style="white-space: pre-wrap; word-break: break-word;">${esc(realText)}</div>` : '');
   } else {
-      // 普通文本消息
       displayHtml = `<div style="white-space: pre-wrap; word-break: break-word;">${esc(text)}</div>`;
   }
   
-  d.innerHTML = '<div class="bubble">' + displayHtml + '</div>';
+  // 生成用户头像
+  const userInitial = currentUsername ? currentUsername.charAt(0).toUpperCase() : 'U';
+  const userAvatarHtml = `<div class="av">${userInitial}</div>`;
+  
+  // 注意组装顺序：气泡在左，头像在右
+  d.innerHTML = '<div class="bubble">' + displayHtml + '</div>' + userAvatarHtml;
+  
   const bubble = d.querySelector('.bubble');
   bubble.onclick = () => openMsgSheet(msgIndex, text);
   document.getElementById('msgs').appendChild(d);
   scrollEnd();
+}
+
+// 替换原有的 addAI 函数
+function addAI(text, idx, staticMode) {
+  const d = document.createElement('div');
+  d.className = 'msg msg-ai';
+  d.dataset.text = text;
+  d.dataset.msgIdx = (idx !== undefined) ? idx : conversation.length - 1;
+
+  // 动态提取角色头像
+  let aiAvatarHtml = `<div class="av" style="background:var(--accent); color:#fff;"><svg viewBox="0 0 68 68" width="20" height="20"><g transform="translate(34,34)" fill="#fff"><path d="M 0 0 C -8 -8, -18 -12, -18 -22 C -18 -30, -8 -30, 0 -22 C 8 -30, 18 -30, 18 -22 C 18 -12, 8 -8, 0 0 Z" transform="translate(0, -2)"/><path d="M 0 0 C -8 -8, -18 -12, -18 -22 C -18 -30, -8 -30, 0 -22 C 8 -30, 18 -30, 18 -22 C 18 -12, 8 -8, 0 0 Z" transform="rotate(120) translate(0, -2)"/><path d="M 0 0 C -8 -8, -18 -12, -18 -22 C -18 -30, -8 -30, 0 -22 C 8 -30, 18 -30, 18 -22 C 18 -12, 8 -8, 0 0 Z" transform="rotate(240) translate(0, -2)"/></g></svg></div>`;
+  
+  if (typeof activeCharId !== 'undefined' && activeCharId) {
+      const char = characterStore.find(c => c.id === activeCharId);
+      if (char) {
+          if (char.avatar && char.avatar.startsWith('data:image/')) {
+              aiAvatarHtml = `<div class="av"><img src="${char.avatar}" style="width:100%;height:100%;object-fit:cover;"></div>`;
+          } else {
+              aiAvatarHtml = `<div class="av">${char.name ? char.name.charAt(0).toUpperCase() : 'C'}</div>`;
+          }
+      }
+  }
+
+  const contentHtml = renderAIHtml(text);
+  d.innerHTML = `${aiAvatarHtml}<div class="body"><div class="text">${contentHtml}</div>${(staticMode ? actionsHTML() : '')}</div>`;
+
+  document.getElementById('msgs').appendChild(d);
+  if (staticMode) bindActs(d);
+  scrollEnd();
+  return d;
 }
 
 function openMsgSheet(idx,text){
@@ -3688,11 +3894,25 @@ async function triggerRealSend(text, isRegen = false) {
   }
 
   // 创建 AI 消息气泡占位
+  // === 原有的占位符生成 === 替换成：
   const aiId = 'msg-' + Date.now();
   const d = document.createElement('div');
   d.className = 'msg msg-ai';
   d.id = aiId;
-  d.innerHTML = `<div class="body"><div class="text"><p>${t('thinking')}</p></div></div>`;
+  
+  let aiAvatarHtml = `<div class="av" style="background:var(--accent); color:#fff;"><svg viewBox="0 0 68 68" width="20" height="20"><g transform="translate(34,34)" fill="#fff"><path d="M 0 0 C -8 -8, -18 -12, -18 -22 C -18 -30, -8 -30, 0 -22 C 8 -30, 18 -30, 18 -22 C 18 -12, 8 -8, 0 0 Z" transform="translate(0, -2)"/><path d="M 0 0 C -8 -8, -18 -12, -18 -22 C -18 -30, -8 -30, 0 -22 C 8 -30, 18 -30, 18 -22 C 18 -12, 8 -8, 0 0 Z" transform="rotate(120) translate(0, -2)"/><path d="M 0 0 C -8 -8, -18 -12, -18 -22 C -18 -30, -8 -30, 0 -22 C 8 -30, 18 -30, 18 -22 C 18 -12, 8 -8, 0 0 Z" transform="rotate(240) translate(0, -2)"/></g></svg></div>`;
+  if (typeof activeCharId !== 'undefined' && activeCharId) {
+      const char = characterStore.find(c => c.id === activeCharId);
+      if (char) {
+          if (char.avatar && char.avatar.startsWith('data:image/')) {
+              aiAvatarHtml = `<div class="av"><img src="${char.avatar}" style="width:100%;height:100%;object-fit:cover;"></div>`;
+          } else {
+              aiAvatarHtml = `<div class="av">${char.name ? char.name.charAt(0).toUpperCase() : 'C'}</div>`;
+          }
+      }
+  }
+  
+  d.innerHTML = `${aiAvatarHtml}<div class="body"><div class="text"><p>${t('thinking')}</p></div></div>`;
   document.getElementById('msgs').appendChild(d);
   scrollEnd();
   
@@ -3734,9 +3954,11 @@ async function triggerRealSend(text, isRegen = false) {
       contextParts.push(`Current date and time is ${timeStr}.`);
   }
   
-  contextParts.push(`User Profile: Name is ${currentUsername}.`);
-  if (currentUserBio) {
-      contextParts.push(`Bio: ${currentUserBio}`);
+  if (injectBioContext) {
+      contextParts.push(`User Profile: Name is ${currentUsername}.`);
+      if (currentUserBio) {
+          contextParts.push(`Bio: ${currentUserBio}`);
+      }
   }
 
   // 4. 使用方括号将元数据包装
@@ -4667,6 +4889,7 @@ async function selectChar(id) {
     renderCharsList(); 
     closeCharsPage();
     resetChat();
+    updateBubbleMode();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -4756,6 +4979,7 @@ window.exitRoleplay = function(e) {
     }
     
     resetChat(); // 触发 UI 重置
+    updateBubbleMode();
 };
 
 // 【核心大改 4：覆写 UI 重置逻辑】严格区分空状态和角色状态
@@ -4889,6 +5113,452 @@ function syncCharFallbackName() {
         textEl.textContent = nameVal ? nameVal.charAt(0).toUpperCase() : 'C';
     }
 }
+
+// ==== 角色气泡模式控制 ====
+let showRoleplayAvatars = localStorage.getItem('cfg_show_rp_avatars') === 'true';
+
+// 核心判断函数：只有 (选了角色) 且 (开了开关) 才会渲染气泡
+function updateBubbleMode() {
+    const isRoleplay = typeof activeCharId !== 'undefined' && activeCharId !== '';
+    if (isRoleplay && showRoleplayAvatars) {
+        document.body.classList.add('roleplay-bubble-mode');
+    } else {
+        document.body.classList.remove('roleplay-bubble-mode');
+    }
+}
+
+function toggleAvatarSetting() {
+    showRoleplayAvatars = !showRoleplayAvatars;
+    localStorage.setItem('cfg_show_rp_avatars', showRoleplayAvatars);
+    document.getElementById('avatarToggle').classList.toggle('on', showRoleplayAvatars);
+    updateBubbleMode();
+    scrollEnd(); 
+}
+document.addEventListener('DOMContentLoaded', updateBubbleMode);
+
+
+// ════════ 完美重构版：离线群聊引擎 (支持头像渲染、3人、重生成) ════════
+
+let activeGroupId = localStorage.getItem('active_group_id') || '';
+let currentGroupMembers = []; 
+let lastSpokeCharId = null;   
+let selectedGroupChars = []; 
+
+// 颜色分配器：让三个人拥有不同的名字颜色和兜底头像背景
+function getGroupCharColor(charId) {
+    const idx = currentGroupMembers.findIndex(c => c.id === charId);
+    if (idx === 0) return 'var(--accent)'; // 橘红色
+    if (idx === 1) return '#7B6FAF';       // 紫色
+    if (idx === 2) return '#4A90D9';       // 蓝色
+    return 'var(--text-muted)';
+}
+
+// 通用头像渲染器：判断是否有自定义图片
+function renderGroupAvatarHtml(charObj, fallbackName) {
+    if (charObj && charObj.avatar && charObj.avatar.startsWith('data:image/')) {
+        return `<img src="${charObj.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
+    }
+    const letter = fallbackName ? fallbackName.charAt(0).toUpperCase() : (charObj && charObj.name ? charObj.name.charAt(0).toUpperCase() : 'A');
+    return letter;
+}
+
+// 1. 打开选人弹窗
+function openGroupSetup() {
+    if (characterStore.length < 2) {
+        uiAlert(t('group_require_chars'));
+        return;
+    }
+    document.getElementById('sb').classList.remove('open');
+    document.getElementById('ov').classList.remove('show');
+    
+    selectedGroupChars = [];
+    const list = document.getElementById('groupCharSelectList');
+    list.innerHTML = '';
+    
+    characterStore.forEach(c => {
+        const el = document.createElement('div');
+        el.className = 'group-char-card';
+        el.dataset.id = c.id;
+        el.innerHTML = `
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--bg-hover); color: var(--text-primary); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; margin: 0 auto 8px; overflow: hidden;">
+                ${renderGroupAvatarHtml(c)}
+            </div>
+            <div style="font-size: 13px; font-weight: 600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(c.name)}</div>
+        `;
+        el.onclick = () => toggleGroupCharSelection(c.id, el);
+        list.appendChild(el);
+    });
+    
+    updateGroupConfirmBtn();
+    document.getElementById('groupSetupOverlay').classList.add('show');
+}
+
+function closeGroupSetup() {
+    document.getElementById('groupSetupOverlay').classList.remove('show');
+}
+
+// 2. 选人逻辑 (支持 2 到 3 人)
+function toggleGroupCharSelection(id, el) {
+    const idx = selectedGroupChars.indexOf(id);
+    if (idx > -1) {
+        selectedGroupChars.splice(idx, 1);
+        el.classList.remove('selected');
+    } else {
+        if (selectedGroupChars.length >= 3) {
+            uiAlert(t('group_max_limit'));
+            return; 
+        }
+        selectedGroupChars.push(id);
+        el.classList.add('selected');
+    }
+    updateGroupConfirmBtn();
+}
+
+function updateGroupConfirmBtn() {
+    const btn = document.getElementById('btnConfirmGroup');
+    if (selectedGroupChars.length >= 2 && selectedGroupChars.length <= 3) {
+        btn.style.background = 'var(--accent)';
+        btn.style.pointerEvents = 'all';
+    } else {
+        btn.style.background = 'var(--text-muted)';
+        btn.style.pointerEvents = 'none';
+    }
+}
+
+// 3. 确认建群并渲染动态欢迎页
+function confirmGroupSetup() {
+    if (selectedGroupChars.length < 2 || selectedGroupChars.length > 3) return;
+    
+    currentGroupMembers = selectedGroupChars.map(id => characterStore.find(c => c.id === id));
+    activeGroupId = "group_" + selectedGroupChars.join("_");
+    
+    activeCharId = ''; 
+    localStorage.setItem('active_char_id', '');
+    localStorage.setItem('active_group_id', activeGroupId);
+    
+    closeGroupSetup();
+    document.body.classList.add('group-mode');
+    document.body.classList.add('roleplay-bubble-mode');
+    
+    resetChat(); 
+
+    // ---- 新增：强制关闭侧边栏和所有子页面，确保直接露出主聊天界面 ----
+    document.getElementById('sb').classList.remove('open');
+    document.getElementById('ov').classList.remove('show');
+    document.getElementById('charsPage').classList.remove('open');
+    document.getElementById('chatsPage').classList.remove('open');
+}
+
+function exitGroupChat() {
+    activeGroupId = '';
+    localStorage.setItem('active_group_id', '');
+    document.body.classList.remove('group-mode');
+    resetChat();
+}
+
+// 4. 拦截 Send 函数 (用户在群聊里发言)
+const originalAppSend = window.send;
+window.send = async function() {
+    if (!activeModelId) {
+        uiAlert(t('err_no_model_msg'), t('err_no_model_title')); return;
+    }
+
+    if (activeGroupId && currentGroupMembers.length >= 2) {
+        const inp = document.getElementById('inp');
+        const text = inp.value.trim();
+        if (!text || typing) return;
+        
+        const currentMsgIdx = conversation.length;
+        conversation.push({ role: 'user', senderId: 'user', senderName: currentUsername, content: text });
+        addUser(text, currentMsgIdx); // 渲染时带上准确序号
+        
+        inp.value = ''; inp.style.height = 'auto';
+        lastSpokeCharId = 'user'; 
+        
+        triggerGroupNext();
+    } else {
+        originalAppSend();
+    }
+};
+
+// 5. 点击 Next 按钮：按座位顺序轮换发言
+window.triggerGroupNext = async function() {
+    if (!activeModelId) { uiAlert(t('group_require_model')); return; }
+    if (typing) return;
+
+    let nextChar = currentGroupMembers[0];
+    if (lastSpokeCharId && lastSpokeCharId !== 'user') {
+        const lastIdx = currentGroupMembers.findIndex(c => c.id === lastSpokeCharId);
+        if (lastIdx > -1) {
+            nextChar = currentGroupMembers[(lastIdx + 1) % currentGroupMembers.length];
+        }
+    }
+    
+    await generateGroupResponse(nextChar);
+};
+
+// 6. 群聊专属生成引擎
+async function generateGroupResponse(actingChar) {
+    typing = true;
+    updateSendBtnState();
+    beginChat(); 
+    
+    const currentMsgIdx = conversation.length; 
+    const charColor = getGroupCharColor(actingChar.id);
+    const avatarInnerHtml = renderGroupAvatarHtml(actingChar);
+
+    // UI：插入气泡占位
+    const d = document.createElement('div');
+    d.className = 'msg msg-ai';
+    d.dataset.msgIdx = currentMsgIdx; 
+    d.innerHTML = `
+        <div class="av" style="background:${charColor}; color:#fff; overflow:hidden;">${avatarInnerHtml}</div>
+        <div class="body">
+            <div class="msg-group-name" style="color:${charColor}">${actingChar.name}</div>
+            <div class="text"><p>${t('thinking')}</p></div>
+        </div>`;
+    document.getElementById('msgs').appendChild(d);
+    scrollEnd();
+
+    // 智能架构识别
+    let arch = currentModelArch;
+    if (!arch || arch === "Unknown") {
+        const activeMod = localModels.find(m => m.id === activeModelId);
+        const searchStr = ((activeMod?.name || "") + " " + (activeMod?.fileName || "")).toLowerCase();
+        if (searchStr.includes("qwen")) arch = "Qwen";
+        else if (searchStr.includes("llama")) arch = "Llama";
+        else arch = "Gemma";
+    }
+
+    const isQwen = arch === "Qwen";
+    const isGemma = arch === "Gemma";
+    
+    const sysStart = isQwen ? "<|im_start|>system\n" : (isGemma ? "" : "<<SYS>>\n");
+    const sysEnd   = isQwen ? "<|im_end|>\n" : (isGemma ? "" : "\n<</SYS>>\n\n");
+    const usrStart = isQwen ? "<|im_start|>user\n" : (isGemma ? "<start_of_turn>user\n" : "[INST] ");
+    const usrEnd   = isQwen ? "<|im_end|>\n" : (isGemma ? "<end_of_turn>\n" : " [/INST]\n");
+    const astStart = isQwen ? "<|im_start|>assistant\n" : (isGemma ? "<start_of_turn>model\n" : "");
+    const astEnd   = isQwen ? "<|im_end|>\n" : (isGemma ? "<end_of_turn>\n" : "\n");
+
+    // 视场欺骗 (Prompt 魔法)
+    let basePrompt = actingChar.prompt || "You are a helpful assistant.";
+    let sysP = `${basePrompt}\n\n[CRITICAL INSTRUCTION: You are in a group chat room. Your ONLY identity is ${actingChar.name}. You must only reply as ${actingChar.name}. Do NOT output other people's names or simulate a conversation. Just speak your part naturally.]`;
+
+    let fullPrompt = "";
+    if (isQwen) fullPrompt += `${sysStart}${sysP}${sysEnd}`;
+
+    let combinedUserText = "";
+    let injectedSys = false;
+    const recentHistory = conversation.slice(-15);
+
+    for (let i = 0; i < recentHistory.length; i++) {
+        let msg = recentHistory[i];
+        if (msg.senderId === actingChar.id) {
+            if (combinedUserText) {
+                if (!injectedSys && !isQwen) { combinedUserText = sysP + "\n\n" + combinedUserText; injectedSys = true; }
+                fullPrompt += `${usrStart}${combinedUserText}${usrEnd}`;
+                combinedUserText = ""; 
+            }
+            let cleanContent = msg.content.replace(/<think>[\s\S]*?(<\/think>|$)/gi, '').trim();
+            fullPrompt += `${astStart}${cleanContent}${astEnd}`;
+        } else {
+            let speakerName = msg.senderName || "User";
+            combinedUserText += `[${speakerName} says]: ${msg.content}\n\n`;
+        }
+    }
+    
+    if (combinedUserText) {
+        if (!injectedSys && !isQwen) { combinedUserText = sysP + "\n\n" + combinedUserText; }
+        fullPrompt += `${usrStart}${combinedUserText}${usrEnd}`;
+    } else if (recentHistory.length === 0) {
+        if (!injectedSys && !isQwen) fullPrompt += `${usrStart}${sysP}\n\nPlease say hello to the group.${usrEnd}`;
+        else fullPrompt += `${usrStart}Please say hello to the group.${usrEnd}`;
+    }
+
+    fullPrompt += `${astStart}`;
+    
+    const activeModForSend = localModels.find(m => m.id === activeModelId);
+    if (activeModForSend && !!activeModForSend.supportsThinking && !extendedThinking && !activeModForSend.legacyThink) {
+        fullPrompt += "</think>\n";
+    }
+
+    let currentResponse = "";
+    let tokenListener = null;
+    
+    try {
+        tokenListener = await Capacitor.Plugins.Llama.addListener('onToken', (data) => {
+            if (!typing) return;
+            currentResponse += data.text;
+            let renderText = currentResponse;
+            if (renderText.startsWith("</think>\n")) renderText = renderText.substring(9);
+            else if (renderText.startsWith("</think>")) renderText = renderText.substring(8);
+            
+            d.querySelector('.text').innerHTML = renderAIHtml(renderText);
+            scrollEnd();
+        });
+
+        const maxT = parseInt(localStorage.getItem('max_tokens') || '512');
+        const ctxS = parseInt(localStorage.getItem('cfg_context_size') || '2048');
+        const threadCnt = parseInt(localStorage.getItem('cfg_threads') || '4');
+        
+        const result = await Capacitor.Plugins.Llama.generate({ 
+            prompt: fullPrompt, maxTokens: maxT, systemPrompt: "", contextSize: ctxS, threads: threadCnt 
+        });
+
+        conversation.push({ role: 'assistant', senderId: actingChar.id, senderName: actingChar.name, content: result.content });
+        lastSpokeCharId = actingChar.id; 
+        
+        let statsHtml = '';
+        if (localStorage.getItem('cfg_show_speed') === 'true' && result.promptSpeed) {
+            statsHtml = `<div class="msg-stats">Time: ${result.totalTime}s | Prompt: ${result.promptSpeed} t/s | Gen: ${result.genSpeed} t/s</div>`;
+        }
+
+        d.dataset.text = result.content;
+        d.innerHTML = `
+            <div class="av" style="background:${charColor}; color:#fff; overflow:hidden;">${avatarInnerHtml}</div>
+            <div class="body">
+                <div class="msg-group-name" style="color:${charColor}">${actingChar.name}</div>
+                <div class="text">${renderAIHtml(result.content)} ${statsHtml}</div>
+                ${actionsHTML()}
+            </div>`;
+        bindActs(d);
+        
+    } catch (err) {
+        d.querySelector('.text').innerHTML = `<span style="color:#D94F4F">${t('group_chat_error')} ${err.message}</span>`;
+    } finally {
+        typing = false;
+        updateSendBtnState();
+        saveChat(); 
+        if (tokenListener) tokenListener.remove();
+    }
+}
+
+// 7. 彻底修复重生成 (Regenerate) 机制
+const originalDoRegen = window.doRegen || doRegen;
+window.doRegen = async function(msgEl) {
+    if (activeGroupId && currentGroupMembers.length >= 2) {
+        if (typing) { stopGeneration(); await new Promise(r => setTimeout(r, 50)); }
+
+        const msgIdx = parseInt(msgEl.dataset.msgIdx);
+        if (isNaN(msgIdx)) { console.error("找不到消息序号"); return; }
+        if (msgIdx < conversation.length - 1) {
+            const confirmRegen = await uiConfirm(t('regen_confirm_msg'), t('regen_confirm_title'));
+            if (!confirmRegen) return;
+        }
+
+        const targetMsg = conversation[msgIdx];
+        if (targetMsg.role === 'user') return; 
+
+        const targetCharId = targetMsg.senderId;
+        const actingChar = currentGroupMembers.find(c => c.id === targetCharId);
+        if (!actingChar) { uiAlert(t('group_regen_err_no_char')); return; }
+
+        conversation.splice(msgIdx);
+        let sibling = msgEl.nextElementSibling;
+        while (sibling) { let n = sibling.nextElementSibling; sibling.remove(); sibling = n; }
+        msgEl.remove();
+
+        lastSpokeCharId = conversation.length > 0 ? (conversation[conversation.length - 1].senderId || 'user') : null;
+        await generateGroupResponse(actingChar);
+    } else {
+        originalDoRegen(msgEl);
+    }
+};
+
+// 8. 兼容恢复历史聊天记录时的 UI 渲染 (附带头像解析)
+const originalLoadChatForGroup = window.loadChat;
+window.loadChat = function(chatId) {
+    const cd = findChat(chatId);
+    if (!cd) return;
+    
+    const isGroupHistory = cd.messages.some(m => m.senderId && m.senderId !== 'user');
+    
+    if (isGroupHistory) {
+        document.body.classList.add('group-mode');
+        document.body.classList.add('roleplay-bubble-mode');
+        
+        const aiMembers = [...new Set(cd.messages.filter(m => m.senderId && m.senderId !== 'user').map(m => m.senderId))];
+        currentGroupMembers = aiMembers.slice(0, 3).map((id, index) => {
+            return characterStore.find(c => c.id === id) || { id: id, name: `AI ${index+1}`, prompt: '' }
+        });
+        
+        activeGroupId = "group_" + currentGroupMembers.map(c => c.id).join("_");
+        localStorage.setItem('active_group_id', activeGroupId);
+        
+        started = false; conversation = [];
+        document.getElementById('welcome').style.display = 'none';
+        const m = document.getElementById('msgs'); m.classList.add('active'); m.innerHTML = '';
+        document.getElementById('disc').classList.add('visible');
+        
+        currentChatId = chatId;
+        
+        cd.messages.forEach((msg, i) => {
+            conversation.push({...msg});
+            if (msg.role === 'user') {
+                addUser(msg.content, i);
+            } else {
+                const d = document.createElement('div');
+                d.className = 'msg msg-ai';
+                d.dataset.text = msg.content;
+                d.dataset.msgIdx = i; 
+                
+                let sName = msg.senderName || "AI";
+                let charColor = getGroupCharColor(msg.senderId);
+                
+                // 找到角色对象获取头像
+                const actingChar = currentGroupMembers.find(c => c.id === msg.senderId);
+                const avatarInnerHtml = renderGroupAvatarHtml(actingChar, sName);
+                
+                d.innerHTML = `
+                    <div class="av" style="background:${charColor}; color:#fff; overflow:hidden;">${avatarInnerHtml}</div>
+                    <div class="body">
+                        <div class="msg-group-name" style="color:${charColor}">${sName}</div>
+                        <div class="text">${renderAIHtml(msg.content)}</div>
+                        ${actionsHTML()}
+                    </div>`;
+                document.getElementById('msgs').appendChild(d);
+                bindActs(d);
+            }
+        });
+        
+        document.getElementById('sb').classList.remove('open');
+        document.getElementById('ov').classList.remove('show');
+        updateSidebarChats();
+        setTimeout(() => { document.getElementById('scroll').scrollTop = document.getElementById('scroll').scrollHeight; }, 50);
+    } else {
+        document.body.classList.remove('group-mode');
+        activeGroupId = '';
+        localStorage.setItem('active_group_id', '');
+        originalLoadChatForGroup(chatId);
+    }
+};
+
+// 9. 重置时的群聊专属炫酷动态头像欢迎页
+const originalResetChatForGroup = window.resetChat;
+window.resetChat = function() {
+    originalResetChatForGroup();
+    if (activeGroupId && currentGroupMembers.length >= 2) {
+        const welcomeContainer = document.getElementById('welcome');
+        
+        let avatarsHtml = currentGroupMembers.map((c, i) => {
+            const color = i === 0 ? 'var(--accent)' : (i === 1 ? '#7B6FAF' : '#4A90D9');
+            const avatarInnerHtml = renderGroupAvatarHtml(c);
+            return `<div style="width: 56px; height: 56px; border-radius: 50%; border: 2px solid ${color}; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold; color:${color}; background:var(--bg-hover); overflow:hidden;">${avatarInnerHtml}</div>`;
+        }).join('<div style="font-size: 20px; color: var(--text-muted); margin: 0 10px;"> -- </div>');
+
+        welcomeContainer.innerHTML = `
+            <div style="display:flex; justify-content:center; margin-bottom: 24px; align-items: center;">
+                ${avatarsHtml}
+            </div>
+            <div class="w-text">${t('group_welcome_title')}</div>
+            <div style="font-size:13px; color:var(--text-muted); margin-top:12px; text-align: center;">
+                <p>${t('group_welcome_desc1')}</p>
+                <p>${t('group_welcome_desc2')}</p>
+            </div>
+            <button onclick="exitGroupChat()" style="margin-top:24px; padding:8px 20px; border-radius:20px; background:var(--bg-input); border:1px solid var(--border); color:var(--text-primary); cursor:pointer;">${t('group_exit')}</button>
+        `;
+    }
+};
 </script>
 </body>
 </html>
