@@ -8,7 +8,7 @@
 
 CloverPal is an **Android** application designed for **local/offline Large** Language Model (LLM) inference. It provides a graphical interface to load and interact with **GGUF format models** entirely offline. 
 
-[Download CloverPal Here](https://github.com/Spike8086/CloverPal/releases/download/v1.0.5/CloverPal_v1.0.5.apk)
+[Download CloverPal Here](https://github.com/Spike8086/CloverPal/releases/download/v1.0.6/CloverPal_v1.0.6.apk)
 
 ## Features
 
@@ -21,7 +21,8 @@ CloverPal is an **Android** application designed for **local/offline Large** Lan
 * Dual-Language Support: The application interface is available in both English and Simplified Chinese.
 * Latex Support: Support the expression of **LaTeX** using KaTeX.
 * HTML Preview: Allow user to have a preview to the html code like a browser.
-
+* Offline Tarven: Model could using different system prompts to talk to itself
+  
 <p align="center">
   <img src="assets/Clover1.jpg" width="260" alt="Home Screen">
   <img src="assets/Clover9.jpg" width="260" alt="Chat Interface">
