@@ -1061,6 +1061,29 @@ body.group-mode .next-btn { display: flex; }
 .group-char-card.selected {
   border-color: var(--accent); background: var(--bg-user-bubble);
 }
+
+/* ════════ 优化主页问候语排版 ════════ */
+.w-text {
+    /* 核心修复 1：限制最大宽度，让两边留出呼吸感（防贴边） */
+    max-width: 80%; 
+    margin: 0 auto; 
+    
+    /* 核心修复 2：现代 CSS 黑科技，自动平衡多行文本的长度，告别“上宽下窄”的丑陋折行 */
+    text-wrap: balance; 
+    
+    /* 核心修复 3：针对中英文混合优化，保持词组完整性 */
+    word-break: keep-all;
+    
+    /* 稍微加大一点行高，让文字更有呼吸感 */
+    line-height: 1.5 !important;
+}
+
+/* 在平板/电脑等宽屏设备上，进一步限制绝对宽度，保持紧凑感 */
+@media (min-width: 768px) { 
+    .w-text { 
+        max-width: 460px; 
+    } 
+}
 </style>
 </head>
 <body class="dark">
@@ -1438,7 +1461,7 @@ body.group-mode .next-btn { display: flex; }
     </div>
     
     <h2 style="font-family:'Source Serif 4', 'Noto Sans SC', serif; font-weight: 400; font-size: 24px; margin-bottom: 4px; color: var(--text-primary);">CloverPal</h2>
-    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Version 1.0.6</p>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Version 1.0.7</p>
     
     <div style="text-align: left; background: var(--bg-page); padding: 16px; border-radius: 12px; margin-bottom: 24px; font-size: 13px; line-height: 1.6; border: 1px solid var(--border);">
       <div style="margin-bottom: 14px;">
@@ -2528,7 +2551,7 @@ function applyTranslations() {
         const key = el.getAttribute('data-i18n-placeholder');
         el.placeholder = t(key);
     });
-    // 👇 新增：替换 Hover 提示文本 (Title)
+    //  新增：替换 Hover 提示文本 (Title)
     document.querySelectorAll('[data-i18n-title]').forEach(el => {
         const key = el.getAttribute('data-i18n-title');
         el.title = t(key);
@@ -3115,7 +3138,7 @@ function saveChat() {
       // 取第一条用户消息的前 10 个字做标题
       const firstUserMsg = conversation.find(m => m.role === 'user');
       if (firstUserMsg) {
-        chatStore[chatIndex].title = firstUserMsg.content.substring(0, 15) + (firstUserMsg.content.length>15?'...':'');
+        chatStore[chatIndex].title = firstUserMsg.content.substring(0, 20) + (firstUserMsg.content.length>20?'...':'');
       }
     }
   } else {
@@ -3133,6 +3156,96 @@ function saveChat() {
   localStorage.setItem('Clover_chats', JSON.stringify(chatStore));
   updateSidebarChats(); // 刷新侧边栏
 }
+
+// ════════ AI 自动生成标题引擎 (终极修复版：解决漏字与不生成问题) ════════
+async function autoGenerateTitle(chatId) {
+    const chat = findChat(chatId);
+    if (!chat || !activeModelId) return;
+
+    // 提取前 3 条对话记录给 AI 做总结
+    const contextMsgs = chat.messages.slice(0, 3);
+    if (contextMsgs.length < 1) return;
+
+    // 动态拼接对话内容 (支持单聊和群聊)
+    const convoText = contextMsgs.map(m => {
+        let name = m.role === 'user' ? (m.senderName || 'User') : (m.senderName || 'Assistant');
+        return `${name}: ${m.content}`;
+    }).join('\n');
+
+    const langInstruction = currentLang === 'zh' ? '用中文总结，不超过15个字。' : 'in English, max 8 words.';
+    const sysPrompt = `You are a helpful assistant. Read the conversation and output a short, precise title directly. No quotes, no prefix like "Title:", no explanations. ${langInstruction}`;
+    const userPrompt = `Conversation:\n${convoText}\n\nOutput the title:`;
+
+    // 智能架构识别
+    let arch = currentModelArch;
+    if (!arch || arch === "Unknown") {
+        const activeMod = localModels.find(m => m.id === activeModelId);
+        const searchStr = ((activeMod?.name || "") + " " + (activeMod?.fileName || "")).toLowerCase();
+        if (searchStr.includes("qwen")) arch = "Qwen";
+        else if (searchStr.includes("llama")) arch = "Llama";
+        else arch = "Gemma";
+    }
+
+    const isQwen = arch === "Qwen";
+    const isGemma = arch === "Gemma";
+    
+    const sysStart = isQwen ? "<|im_start|>system\n" : (isGemma ? "" : "<<SYS>>\n");
+    const sysEnd   = isQwen ? "<|im_end|>\n" : (isGemma ? "" : "\n<</SYS>>\n\n");
+    const usrStart = isQwen ? "<|im_start|>user\n" : (isGemma ? "<start_of_turn>user\n" : "[INST] ");
+    const usrEnd   = isQwen ? "<|im_end|>\n" : (isGemma ? "<end_of_turn>\n" : " [/INST]\n");
+    const astStart = isQwen ? "<|im_start|>assistant\n" : (isGemma ? "<start_of_turn>model\n" : "");
+
+    let fullPrompt = "";
+    if (isQwen) {
+        fullPrompt = `${sysStart}${sysPrompt}${sysEnd}${usrStart}${userPrompt}${usrEnd}${astStart}`;
+    } else if (isGemma) {
+        fullPrompt = `${usrStart}${sysPrompt}\n\n${userPrompt}${usrEnd}${astStart}`;
+    } else {
+        fullPrompt = `${usrStart}${sysStart}${sysPrompt}${sysEnd}${userPrompt}${usrEnd}${astStart}`;
+    }
+
+    // 智能拦截深度思考
+    const activeModForSend = localModels.find(m => m.id === activeModelId);
+    if (activeModForSend && !!activeModForSend.supportsThinking && !!activeModForSend.legacyThink) {
+        if (isQwen) fullPrompt = `${sysStart}${sysPrompt}${sysEnd}${usrStart}${userPrompt} /no_think${usrEnd}${astStart}`;
+    } else if (activeModForSend && !!activeModForSend.supportsThinking && !activeModForSend.legacyThink) {
+        fullPrompt += "</think>\n";
+    }
+
+    try {
+        const result = await Capacitor.Plugins.Llama.generate({ 
+            prompt: fullPrompt, 
+            maxTokens: 25, 
+            systemPrompt: "", 
+            contextSize: 2048,
+            threads: parseInt(localStorage.getItem('cfg_threads') || '4')
+        });
+
+        let newTitle = result.content.trim();
+        // 清洗数据：剥离 Think 过程、不规范的引号，以及某些模型自作主张加的 "Title:" 前缀
+        newTitle = newTitle.replace(/<think>[\s\S]*?(<\/think>|$)/gi, '').trim();
+        newTitle = newTitle.replace(/^["'「”]|["'」“]$/g, '').trim();
+        newTitle = newTitle.replace(/^(Title:|标题：|标题:)\s*/i, '').trim();
+        
+        if (newTitle && newTitle.length > 0) {
+            if(newTitle.length > 50) newTitle = newTitle.substring(0, 50) + '...';
+            
+            chat.title = newTitle;
+            // 不需要在这里保存本地，外面的 finally 块会统一调用 saveChat()
+            
+            updateSidebarChats();
+            if (document.getElementById('chatsPage').classList.contains('open')) {
+                renderChatsList();
+            }
+            if (chatId === currentChatId && document.getElementById('hdrMenuTitle')) {
+                document.getElementById('hdrMenuTitle').textContent = chat.title;
+            }
+        }
+    } catch (e) {
+        console.warn("Auto generate title failed:", e);
+    }
+}
+
 function createNewChatId() {
   return 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
@@ -4164,12 +4277,25 @@ async function triggerRealSend(text, isRegen = false) {
     console.error(err);
     d.querySelector('.text').innerHTML = `<span style="color:red">Error: ${err.message}</span>`;
   } finally {
+    //  修复 1：在执行任何后台任务前，【必须】先关掉文字流监听器，防止漏字到界面上！
+    if (tokenListener) {
+        tokenListener.remove();
+        tokenListener = null; 
+    }
+    //  修复 2：把刚刚 AI 说的话先保存进存储里，这样总结函数才能读到上下文
+    saveChat(); 
+
+    //  修复 3：如果是第一轮对话，让界面继续保持锁定 (typing=true)，防止用户打断
+    if (conversation.length === 2) {
+        typing = true;
+        updateSendBtnState();
+        await autoGenerateTitle(currentChatId);
+    }
+
+    // 所有任务都完成了，彻底解锁 UI
     typing = false;
     updateSendBtnState();
     saveChat(); 
-    if (tokenListener) {
-        tokenListener.remove();
-    }
   }
 }
 // ── Init ──
@@ -5254,6 +5380,8 @@ function exitGroupChat() {
     activeGroupId = '';
     localStorage.setItem('active_group_id', '');
     document.body.classList.remove('group-mode');
+    document.body.classList.remove('roleplay-bubble-mode'); // 修复核心：强制拔除气泡模式
+    updateBubbleMode(); // 修复核心：重新让系统检测单聊的开关状态
     resetChat();
 }
 
@@ -5269,12 +5397,20 @@ window.send = async function() {
         const text = inp.value.trim();
         if (!text || typing) return;
         
+        //  核心修复 1：群聊发第一条消息时，必须生成会话ID并初始化
+        if (!currentChatId) {
+            currentChatId = createNewChatId();
+            chatStore.unshift({ id: currentChatId, title: t('new_chat'), starred: false, time: Date.now(), messages: [] });
+        }
+        
         const currentMsgIdx = conversation.length;
         conversation.push({ role: 'user', senderId: 'user', senderName: currentUsername, content: text });
         addUser(text, currentMsgIdx); // 渲染时带上准确序号
         
         inp.value = ''; inp.style.height = 'auto';
         lastSpokeCharId = 'user'; 
+        
+        saveChat(); //  核心修复 2：用户发言后立刻保存一次进度
         
         triggerGroupNext();
     } else {
@@ -5286,6 +5422,12 @@ window.send = async function() {
 window.triggerGroupNext = async function() {
     if (!activeModelId) { uiAlert(t('group_require_model')); return; }
     if (typing) return;
+
+    //  核心修复 3：如果用户一上来什么都没发，直接点击了“▶”让AI先说，也要创建会话ID
+    if (!currentChatId) {
+        currentChatId = createNewChatId();
+        chatStore.unshift({ id: currentChatId, title: t('new_chat'), starred: false, time: Date.now(), messages: [] });
+    }
 
     let nextChar = currentGroupMembers[0];
     if (lastSpokeCharId && lastSpokeCharId !== 'user') {
@@ -5427,11 +5569,26 @@ async function generateGroupResponse(actingChar) {
     } catch (err) {
         d.querySelector('.text').innerHTML = `<span style="color:#D94F4F">${t('group_chat_error')} ${err.message}</span>`;
     } finally {
-        typing = false;
-        updateSendBtnState();
-        saveChat(); 
-        if (tokenListener) tokenListener.remove();
-    }
+      //  修复 1：先关监听器防止漏字
+      if (tokenListener) {
+          tokenListener.remove();
+          tokenListener = null;
+      }
+      //  修复 2：先同步数据
+      saveChat();
+
+      //  修复 3：判断对话轮次
+      if (conversation.length == 3) {
+          typing = true;
+          updateSendBtnState();
+          await autoGenerateTitle(currentChatId);
+      }
+
+      // 彻底解锁 UI
+      typing = false;
+      updateSendBtnState();
+      saveChat(); 
+  }
 }
 
 // 7. 彻底修复重生成 (Regenerate) 机制
@@ -5505,8 +5662,6 @@ window.loadChat = function(chatId) {
                 
                 let sName = msg.senderName || "AI";
                 let charColor = getGroupCharColor(msg.senderId);
-                
-                // 找到角色对象获取头像
                 const actingChar = currentGroupMembers.find(c => c.id === msg.senderId);
                 const avatarInnerHtml = renderGroupAvatarHtml(actingChar, sName);
                 
@@ -5528,8 +5683,10 @@ window.loadChat = function(chatId) {
         setTimeout(() => { document.getElementById('scroll').scrollTop = document.getElementById('scroll').scrollHeight; }, 50);
     } else {
         document.body.classList.remove('group-mode');
+        document.body.classList.remove('roleplay-bubble-mode'); //  修复核心：切回普通单聊时，强制拔除气泡模式
         activeGroupId = '';
         localStorage.setItem('active_group_id', '');
+        updateBubbleMode(); //  修复核心：重新判断普通单聊的开关是否开启
         originalLoadChatForGroup(chatId);
     }
 };
