@@ -8,12 +8,12 @@
 
 CloverPal is an **Android** application designed for **local/offline Large** Language Model (LLM) inference. It provides a graphical interface to load and interact with **GGUF format models** entirely offline. 
 
-[Download CloverPal Here](https://github.com/Spike8086/CloverPal/releases/download/v1.0.6/CloverPal_v1.0.6.apk)
+[Download CloverPal Here](https://github.com/Spike8086/CloverPal/releases/download/v1.0.8/CloverPal_v1.0.8.apk)
 
 ## Features
 
 * UI Design: A minimalist user interface focused on readability and straightforward navigation.
-* Document Parsing: Supports reading small document files (.txt, .docx) to include their contents directly within the chat context.
+* Document Parsing: Supports reading small document files (.txt, .docx, .pdf) to include their contents directly within the chat context.
 * Chat Functionality: Includes essential chat controls such as message editing, response regeneration, and the ability to configure both system and user prompts.
 * Theme Customization: Users can adjust the global accent color of the interface.
 * Model Storage Options: Supports importing models via external storage direct-read mode (to save device space) or internal copy mode (for file stability).
@@ -63,6 +63,7 @@ CloverPal is built using the amazing work from:
 * **[marked](https://github.com/markedjs/marked)**: A low-level markdown compiler used for rendering chat responses.
 * **[mammoth.js](https://github.com/mwilliamson/mammoth.js)**: Enables text extraction and parsing from document (.docx) files.
 * **[KaTeX.js](https://github.com/KaTeX/KaTeX)**: Enable render LaTeX expression.
+* **[pdf.js](https://github.com/mozilla/pdf.js/)**: Enable reading pdf flies.
   
 And many other open source libraries that make this project possible!
 
