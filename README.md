@@ -1,4 +1,4 @@
-# CloverPal☘️-Not just offline AI
+# CloverPal☘️-offline Silly Tarven AI on Android
 <p align="center">
   <img src="https://img.shields.io/badge/Inference_Engine-llama.cpp-00599C?style=flat-square&logo=c%2B%2B&logoColor=white" alt="Engine">
   <img src="https://img.shields.io/badge/Optimization-ARMv8.4_DotProd-E34F26?style=flat-square&logo=arm&logoColor=white" alt="ARM Optimization">
