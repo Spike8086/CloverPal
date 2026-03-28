@@ -35,8 +35,9 @@ CloverPal is an **Android** application designed for **local/offline Large** Lan
   <img src="assets/Clover8.jpg" width="260" alt="UI Customization">
 </p>
 
-
-<img src="assets/schedule.png" width="260" alt="Home Screen">
+<p align="center">
+<img src="assets/schedule.png" width="780" alt="Home Screen">
+</p> 
 ## Technical Specifications
 
 * Operating System: Android
