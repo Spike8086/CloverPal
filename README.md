@@ -22,7 +22,7 @@ CloverPal is an **Android** application designed for **local/offline Large** Lan
 * Latex Support: Support the expression of **LaTeX** using KaTeX.
 * HTML Preview: Allow user to have a preview to the html code like a browser.
 * Offline Tarven: Model could using different system prompts to talk to itself
-  
+
 <p align="center">
   <img src="assets/Clover1.jpg" width="260" alt="Home Screen">
   <img src="assets/Clover9.jpg" width="260" alt="Chat Interface">
@@ -35,6 +35,8 @@ CloverPal is an **Android** application designed for **local/offline Large** Lan
   <img src="assets/Clover8.jpg" width="260" alt="UI Customization">
 </p>
 
+
+<img src="assets/schedule.png" width="260" alt="Home Screen">
 ## Technical Specifications
 
 * Operating System: Android
