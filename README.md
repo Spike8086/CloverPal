@@ -8,7 +8,7 @@
 
 CloverPal is an **Android** application designed for **local/offline Large** Language Model (LLM) inference. It's hardcore, fully **offline** LLM client for Android. Powered by deeply optimized llama.cpp (ARMv8.4 DotProd), featuring **HTML Live Preview, file reading, LaTeX rendering**, and an innovative **Offline Silly Tavern** mode for multi-character roleplay. 100% on-device.
 
-**For Android:** [Download CloverPal Here](https://github.com/Spike8086/CloverPal/releases/download/v1.0.9/CloverPal_v1.0.9.apk)
+**For Android:** [Download CloverPal Here](https://github.com/Spike8086/CloverPal/releases/download/v1.1.0/CloverPal_v1.1.0.apk)
 
 **For IOS:** Coming Soon
 
@@ -19,7 +19,7 @@ CloverPal is an **Android** application designed for **local/offline Large** Lan
 * Chat Functionality: Includes essential chat controls such as message editing, response regeneration, and the ability to configure both system and user prompts.
 * Theme Customization: Users can adjust the global accent color of the interface.
 * Model Storage Options: Supports importing models via external storage direct-read mode (to save device space) or internal copy mode (for file stability).
-* Model Architecture Compatibility: Supports modern architectures including the Qwen3.5 architecture, Qwen3's Soft Thinking mechanism, and the Gemma3n series.
+* Model Architecture Compatibility: Supports modern architectures including the Qwen3.5 architecture, Qwen3's Soft Thinking mechanism, and the Gemma3n/Gemma4 series.
 * Dual-Language Support: The application interface is available in both English and Simplified Chinese.
 * Latex Support: Support the expression of **LaTeX** using KaTeX.
 * HTML Preview: Allow user to have a preview to the html code like a browser.
