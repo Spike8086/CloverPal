@@ -15,11 +15,11 @@ CloverPal is an **Android** application designed for **local/offline Large** Lan
 ## Features
 
 * UI Design: A minimalist user interface focused on readability and straightforward navigation.
-* Document Parsing: Supports reading small document files (.txt, .docx, .pdf) to include their contents directly within the chat context.
+* Document Parsing: Supports **reading small document files (.txt, .docx, .pdf)** to include their contents directly within the chat context.
 * Chat Functionality: Includes essential chat controls such as message editing, response regeneration, and the ability to configure both system and user prompts.
 * Theme Customization: Users can adjust the global accent color of the interface.
 * Model Storage Options: Supports importing models via external storage direct-read mode (to save device space) or internal copy mode (for file stability).
-* Model Architecture Compatibility: Supports modern architectures including the Qwen3.5 architecture, Qwen3's Soft Thinking mechanism, and the Gemma3n/Gemma4 series.
+* Model Architecture Compatibility: Supports modern architectures including the **Qwen3.5** architecture, **Qwen3**'s Soft Thinking mechanism, and the **Gemma3n/Gemma4** series.
 * Dual-Language Support: The application interface is available in both English and Simplified Chinese.
 * Latex Support: Support the expression of **LaTeX** using KaTeX.
 * HTML Preview: Allow user to have a preview to the html code like a browser.
