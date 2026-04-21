@@ -8,7 +8,7 @@
 
 CloverPal is an **Android** application designed for **local/offline Large** Language Model (LLM) inference. It's hardcore, fully **offline** LLM client for Android. Powered by deeply optimized llama.cpp (ARMv8.4 DotProd), featuring **HTML Live Preview, file reading, LaTeX rendering**, and an innovative **Offline Silly Tavern** mode for multi-character roleplay. 100% on-device.
 
-**For Android:** [Download CloverPal Here](https://github.com/Spike8086/CloverPal/releases/download/v1.1.3/CloverPal_v1.1.3.apk)
+**For Android:** [Download CloverPal Here](https://github.com/Spike8086/CloverPal/releases/download/v1.1.4/CloverPal_v1.1.4.apk)
 
 **For IOS:** Coming Soon
 
@@ -24,6 +24,7 @@ CloverPal is an **Android** application designed for **local/offline Large** Lan
 * Latex Support: Support the expression of **LaTeX** using KaTeX.
 * HTML Preview: Allow user to have a preview to the html code like a browser.
 * Offline Tarven: Model could using different system prompts to talk to itself
+* Speech Regonization: App able to convert Speech to text
 
 <p align="center">
   <img src="assets/Clover1.jpg" width="260" alt="Home Screen">
@@ -70,7 +71,8 @@ CloverPal is built using the amazing work from:
 * **[mammoth.js](https://github.com/mwilliamson/mammoth.js)**: Enables text extraction and parsing from document (.docx) files.
 * **[KaTeX.js](https://github.com/KaTeX/KaTeX)**: Enable render LaTeX expression.
 * **[pdf.js](https://github.com/mozilla/pdf.js/)**: Enable reading pdf flies.
-  
+* **[whisper.cpp](https://github.com/ggerganov/whisper.cpp)**: Enable voice convert to text.
+
 And many other open source libraries that make this project possible!
 
 ## ⭐ Support the Project
