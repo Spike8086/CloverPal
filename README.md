@@ -8,7 +8,7 @@
 
 CloverPal is an **Android** application designed for **local/offline Large** Language Model (LLM) inference. It's hardcore, fully **offline** LLM client for Android. Powered by deeply optimized llama.cpp (ARMv8.4 DotProd), featuring **HTML Live Preview, file reading, LaTeX rendering, Speech Recognition**, and an innovative **Offline Silly Tavern** mode for multi-character roleplay. 100% on-device.
 
-**For Android(v1.1.4):** [Download CloverPal Here](https://github.com/Spike8086/CloverPal/releases/download/v1.1.4/CloverPal_v1.1.4.apk)
+**For Android(v1.1.5):** [Download CloverPal Here](https://github.com/Spike8086/CloverPal/releases/download/v1.1.5/CloverPal_v1.1.5.apk)
 
 **For IOS:** Coming Soon
 
