@@ -1,7 +1,6 @@
-# CloverPal☘️ — Offline Silly Tavern AI on Android
+[English](./README.md) | [简体中文](./README_CN.md)
 
-[![中文](https://img.shields.io/badge/lang-简体中文-red?style=flat-square)](README_CN.md)
-[![English](https://img.shields.io/badge/lang-English-blue?style=flat-square)](README.md)
+# CloverPal☘️ — Offline Silly Tavern AI on Android
 
 <p align="center">
   <img src="https://img.shields.io/badge/Inference_Engine-llama.cpp-00599C?style=flat-square&logo=c%2B%2B&logoColor=white" alt="Engine">
