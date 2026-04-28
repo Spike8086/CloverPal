@@ -1,4 +1,8 @@
-# CloverPal☘️-Offline Silly Tavern AI on Android
+# CloverPal☘️ — Offline Silly Tavern AI on Android
+
+[![中文](https://img.shields.io/badge/lang-简体中文-red?style=flat-square)](README_CN.md)
+[![English](https://img.shields.io/badge/lang-English-blue?style=flat-square)](README.md)
+
 <p align="center">
   <img src="https://img.shields.io/badge/Inference_Engine-llama.cpp-00599C?style=flat-square&logo=c%2B%2B&logoColor=white" alt="Engine">
   <img src="https://img.shields.io/badge/Optimization-ARMv8.4_DotProd-E34F26?style=flat-square&logo=arm&logoColor=white" alt="ARM Optimization">
@@ -6,25 +10,25 @@
   <img src="https://img.shields.io/badge/Privacy-100%25_On--Device-4CAF50?style=flat-square&logo=shield&logoColor=white" alt="On Device">
 </p>
 
-CloverPal is an **Android** application designed for **local/offline Large** Language Model (LLM) inference. It's hardcore, fully **offline** LLM client for Android. Powered by deeply optimized llama.cpp (ARMv8.4 DotProd), featuring **HTML Live Preview, file reading, LaTeX rendering, Speech Recognition**, and an innovative **Offline Silly Tavern** mode for multi-character roleplay. 100% on-device.
+CloverPal is a hardcore, fully **offline** LLM client for Android. Powered by deeply optimized llama.cpp (ARMv8.4 DotProd), featuring **HTML Live Preview, file reading, LaTeX rendering, Speech Recognition**, and an innovative **Offline Silly Tavern** mode for multi-character roleplay. 100% on-device, zero data leaves your phone.
 
-**For Android(v1.1.5):** [Download CloverPal Here](https://github.com/Spike8086/CloverPal/releases/download/v1.1.5/CloverPal_v1.1.5.apk)
+**For Android (v1.1.5):** [Download CloverPal Here](https://github.com/Spike8086/CloverPal/releases/download/v1.1.5/CloverPal_v1.1.5.apk)
 
-**For IOS:** Coming Soon
+**For iOS:** Coming Soon
 
 ## Features
 
-* UI Design: A minimalist user interface focused on readability and straightforward navigation.
-* Document Parsing: Supports **reading small document files (.txt, .docx, .pdf)** to include their contents directly within the chat context.
-* Chat Functionality: Includes essential chat controls such as message editing, response regeneration, and the ability to configure both system and user prompts.
-* Theme Customization: Users can adjust the global accent color of the interface.
-* Model Storage Options: Supports importing models via external storage direct-read mode (to save device space) or internal copy mode (for file stability).
-* Model Architecture Compatibility: Supports modern architectures including the **Qwen3.5** architecture, **Qwen3**'s Soft Thinking mechanism, and the **Gemma3n/Gemma4** series.
-* Dual-Language Support: The application interface is available in both English and Simplified Chinese.
-* Latex Support: Support the expression of **LaTeX** using KaTeX.
-* HTML Preview: Allow user to have a preview to the html code like a browser.
-* Offline Tarven: Model could using different system prompts to talk to itself
-* Speech Regonization: App able to convert Speech to text
+- **Minimalist UI** — Clean interface focused on readability, with full theme customization (accent color, light/dark/custom background, font sizes).
+- **7-Language Interface** — Simplified Chinese, Traditional Chinese, English, Japanese, Korean, Spanish, and French.
+- **Document Parsing** — Read `.txt`, `.docx`, and `.pdf` files directly into chat context.
+- **LaTeX Rendering** — Math expressions rendered beautifully via KaTeX.
+- **HTML Live Preview** — Preview HTML code blocks in a sandboxed iframe, right inside the chat.
+- **Offline Silly Tavern** — Create characters with custom avatars and system prompts, then let them talk to each other in group chats (2–3 AI characters).
+- **Speech Recognition** — Offline voice-to-text powered by whisper.cpp, supporting automatic language detection across 99 languages.
+- **Smart Chat Management** — Message editing, response regeneration, starred conversations, batch delete, auto-generated titles, and full chat history search.
+- **Flexible Model Import** — External direct-read (saves space) or internal copy (more stable), plus one-tap download from HuggingFace / ModelScope with curated presets.
+- **Architecture Support** — Qwen3.5, Qwen3 (Soft Thinking), Gemma 4, Gemma 3, LLaMA, and other GGUF-compatible models.
+- **Think Mode Control** — Toggle thinking on/off per model, choose format (Qwen3.5 / Qwen3 / Gemma 4), and set a token budget for the thinking process.
 
 <p align="center">
   <img src="assets/Clover1.jpg" width="260" alt="Home Screen">
@@ -39,14 +43,15 @@ CloverPal is an **Android** application designed for **local/offline Large** Lan
 </p>
 
 <p align="center">
-<img src="assets/schedule.png" width="780" alt="Home Screen">
-</p> 
+  <img src="assets/schedule.png" width="780" alt="Roadmap">
+</p>
 
 ## Technical Specifications
 
-* Operating System: Android
-* SDK Requirements: Minimum SDK 28 (Android 9.0), Target SDK 35 (Android 15).
-* Inference Engine: The underlying text generation is powered by **llama.cpp**.
+- **OS:** Android
+- **SDK:** Minimum SDK 28 (Android 9.0), Target SDK 35 (Android 15)
+- **Inference Engine:** llama.cpp
+- **Speech Engine:** whisper.cpp
 
 ## Disclaimer
 
@@ -58,23 +63,23 @@ This application provides a framework for local computation only. CloverPal oper
   <img src="https://img.shields.io/badge/License-AGPL--3.0-00599C?style=flat-square&logo=opensourceinitiative&logoColor=white" alt="License: AGPL-3.0">
 </a>
 
-This project is licensed under the **GNU AGPL-3.0 License** - see the [LICENSE](LICENSE) file for details. 
+This project is licensed under the **GNU AGPL-3.0 License** — see the [LICENSE](LICENSE) file for details.
 *(You are free to use, modify, and distribute this software, but any modified versions or services utilizing this code must also be open-sourced under the same AGPL-3.0 license.)*
 
 ## Acknowledgements
 
 CloverPal is built using the amazing work from:
 
-* **[llama.cpp](https://github.com/ggerganov/llama.cpp)**: Enables efficient inference of LLMs on local devices.
-* **[Capacitor](https://capacitorjs.com/)**: The cross-platform native runtime powering the mobile experience using web technologies.
-* **[marked](https://github.com/markedjs/marked)**: A low-level markdown compiler used for rendering chat responses.
-* **[mammoth.js](https://github.com/mwilliamson/mammoth.js)**: Enables text extraction and parsing from document (.docx) files.
-* **[KaTeX.js](https://github.com/KaTeX/KaTeX)**: Enable render LaTeX expression.
-* **[pdf.js](https://github.com/mozilla/pdf.js/)**: Enable reading pdf flies.
-* **[whisper.cpp](https://github.com/ggerganov/whisper.cpp)**: Enable voice convert to text.
+- **[llama.cpp](https://github.com/ggerganov/llama.cpp)** — Efficient on-device LLM inference.
+- **[whisper.cpp](https://github.com/ggerganov/whisper.cpp)** — Offline speech-to-text.
+- **[Capacitor](https://capacitorjs.com/)** — Cross-platform native runtime.
+- **[marked](https://github.com/markedjs/marked)** — Markdown rendering.
+- **[mammoth.js](https://github.com/mwilliamson/mammoth.js)** — DOCX text extraction.
+- **[KaTeX](https://github.com/KaTeX/KaTeX)** — LaTeX rendering.
+- **[pdf.js](https://github.com/mozilla/pdf.js/)** — PDF reading.
 
-And many other open source libraries that make this project possible!
+And many other open-source libraries that make this project possible!
 
 ## ⭐ Support the Project
-If you find CloverPal useful, please consider giving this repo a star ⭐ — it's free, takes just one second, and means a lot to an independent developer!
-Every star helps more people discover CloverPal and motivates continued development of new features and optimizations. Thank you for your support! 🍀
+
+If you find CloverPal useful, please consider giving this repo a star ⭐ — it's free, takes just one second, and means a lot to an independent developer! Every star helps more people discover CloverPal and motivates continued development. Thank you for your support! 🍀
