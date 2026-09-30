@@ -11,7 +11,7 @@
 
 CloverPal 是一款硬核的安卓**纯离线**大模型客户端。底层由深度优化的 llama.cpp（ARMv8.4 DotProd）驱动，支持 **HTML 实时预览、文档阅读、LaTeX 公式渲染、语音识别**，以及创新的**离线酒馆模式**——多角色扮演群聊。100% 本地推理，数据绝不离开你的手机。
 
-**安卓版 (v1.2.3)：** [点击下载 CloverPal](https://github.com/Spike8086/CloverPal/releases/download/V1.2.3/CloverPal_v1.2.3.apk)
+**安卓版 (v1.2.4)：** [点击下载 CloverPal](https://github.com/Spike8086/CloverPal/releases/download/V1.2.4/CloverPal_v1.2.4.apk)
 
 **iOS 版：** 即将推出
 
